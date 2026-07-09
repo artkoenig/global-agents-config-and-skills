@@ -11,18 +11,13 @@ Use this skill to systematically process the issues of the active feature.
 ## Workflow
 
 ### 1. Determine Active Feature
-- Try to determine the active feature from the current conversation context.
-- If unclear, read the file `.scratch/active-feature.txt` in the project root.
-- If the file does not exist or is empty, ask the user for the slug of the feature.
+- Obtain the active feature slug by running `python3 .agents/skills/manage-feature/scripts/feature.py get-active`.
+- If no active feature is set, ask the user to run `/manage-feature` to set it.
 
 ### 2. Find Next Unblocked Issue
-- Scan the directory `.scratch/<feature-slug>/issues/` for files:
-    - Find the first open issue (numbered starting from `01`) that:
-        - Has the status `Status: ready-for-agent`.
-    - Is not blocked (i.e., all issues listed in `Blocked by:` have the status `Status: resolved`, or there are no blockers).
-    - Change the status of the selected issue in the corresponding markdown file to `Status: claimed`.
-    - Present the selected issue and its acceptance criteria to the user in the chat.
-    - Stop scanning and ignore all other issues.
+- Find the next unblocked issue by running `python3 .agents/skills/manage-feature/scripts/feature.py next-issue`.
+- Change the status of the selected issue to `claimed` by running `python3 .agents/skills/manage-feature/scripts/feature.py update-issue <issue-path> claimed`.
+- Present the selected issue and its acceptance criteria to the user in the chat.
 - During the subsequent implementation, only implement what was described in the found issue. Do not anticipate unimplemented issues in this ticket.
 
 ### 3. Perform TDD Cycle (Test-Driven Development)
@@ -47,7 +42,7 @@ If not already done, create a branch for the issue named `feature/<feature-slug>
 
 ### 4. Resolve Issue
 - As soon as all acceptance criteria of the issue are met and all tests pass successfully, update the issue file:
-  - Set the status to `Status: resolved`.
+  - Set the status to `Status: resolved` by running `python3 .agents/skills/manage-feature/scripts/feature.py update-issue <issue-path> resolved`.
   - Append a short summary of the solution under the heading `## Answer` (or `## Solution`).
 - Make a git commit for the resolved issue on the local branch.
 

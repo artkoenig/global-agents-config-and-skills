@@ -10,22 +10,15 @@ Use this skill to automatically analyze, implement, and test all open features o
 
 ## Workflow
 
-### 1. Identify Features/Stories
-- Read the global project PRD (typically `PRD.md` in the project root directory).
-- Analyze the `## Features` section to extract all linked features and their corresponding paths (e.g., `.scratch/<feature-slug>/PRD.md`).
-- If the global `PRD.md` does not exist or contains no entries, search for subdirectories in the `.scratch/` folder to determine the feature slugs.
+### 1. Identify Open Features
+- Run `python3 .agents/skills/manage-feature/scripts/feature.py list-open-features` to get a list of all features that have at least one unresolved issue.
+- If no open features are found, the process is complete.
 
-### 2. Determine Open Features
-Iterate through all found feature slugs and determine their status:
-- Scan the directory `.scratch/<feature-slug>/issues/` for markdown files matching the pattern `NN-<slug>.md`.
-- A feature is considered **open** (or incomplete) if at least one issue exists whose status is not `Status: resolved` (e.g., `Status: ready-for-agent` or `Status: claimed`).
-- A feature is considered **completed** when all defined issues have the status `Status: resolved`. Features without issues are skipped, as it is assumed that the requirements analysis has already created issues.
-
-### 3. Implement Features Sequentially
+### 2. Implement Features Sequentially
 Go through all open features one by one. For each open feature, execute the following steps completely automatically:
 
 #### Step A: Activate Feature & Prepare Branch
-- Write the current feature slug into the file `.scratch/active-feature.txt` in the project root.
+- Set the current feature as active by running `python3 .agents/skills/manage-feature/scripts/feature.py set-active <feature-slug>`.
 - Ensure that the git branch for the feature exists and is active. The branch name follows the pattern `feature/<feature-slug>`. If the branch does not exist, create it and check it out.
 
 #### Step B: Spawn Subagents for Implementation & Testing

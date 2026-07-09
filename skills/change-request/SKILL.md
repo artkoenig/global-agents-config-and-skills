@@ -29,36 +29,8 @@ Use this skill to add a new change request (feature or bug) to the project.
   ```
 
 ### 3. Create Change Request Workspace
-- Create the directory `.scratch/<change-request-slug>/` as well as the subdirectory `.scratch/<change-request-slug>/issues/`.
-- Write the current slug into the status file `.scratch/active-feature.txt` (overwrite any existing old slugs):
-  ```
-  <change-request-slug>
-  ```
-- Create a PRD template under `.scratch/<change-request-slug>/PRD.md` with the following sections (adjust the description if it is a bug):
-  ```markdown
-  # PRD: [Change Request Name]
-
-  ## Problem Statement / Bug Description
-  [Describe the problem the user is having or how the bug manifests here. If a bug: document Current Behavior vs. Expected Behavior]
-
-  ## Solution
-  [The proposed solution from the user's perspective]
-
-  ## User Stories / Requirements
-  1. As an <Actor>, I want <Feature>, in order to achieve <Benefit>.
-
-  ## Technical Decisions
-  - Affected Modules:
-  - Technical Clarifications/Architectural Decisions:
-  - API Contracts / Data Models:
-
-  ## Testing Decisions
-  - Modules to Test:
-  - Test Interfaces (Seams):
-
-  ## Out of Scope
-  - [Things that are not part of this change request]
-  ```
+- Initialize the workspace by executing: `python3 .agents/skills/manage-feature/scripts/feature.py init <change-request-slug> "[Change Request Name]"` (replacing the placeholders with the actual slug and name).
+- Open the newly created `.scratch/<change-request-slug>/PRD.md` and document the gathered information (Problem Statement, Solution, etc.).
 
 ### 4. Completion (Handoff)
 - Do not generate an implementation plan (implementation_plan.md) and do not write code. Under no circumstances start with the implementation.

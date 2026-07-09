@@ -11,9 +11,8 @@ Use this skill to analyze the active feature in detail and break it down into im
 ## Workflow
 
 ### 1. Determine Active Feature
-- Attempt to determine the active feature from the current conversation context.
-- If this is unclear, read the file `.scratch/active-feature.txt` in the project root to obtain the feature slug.
-- If the file does not exist or is empty, ask the user for the slug of the feature to be analyzed, and create the file `.scratch/active-feature.txt` with this slug.
+- Obtain the active feature slug by running `python3 .agents/skills/manage-feature/scripts/feature.py get-active`.
+- If no active feature is set, ask the user to run `/manage-feature` to set it, or run `python3 .agents/skills/manage-feature/scripts/feature.py set-active <slug>` if you know the slug.
 
 ### 2. Context & Codebase Analysis
 - Examine the current state of the code regarding the requirements. Use the domain documents present in the project (e.g., `CONTEXT.md`) and respect existing architectural decision records (ADRs).

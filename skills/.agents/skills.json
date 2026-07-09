@@ -5,6 +5,7 @@
     { "path": "../requirements-analysis" },
     { "path": "../implement" },
     { "path": "../testing" },
-    { "path": "../implement-all" }
+    { "path": "../implement-all" },
+    { "path": "../manage-feature" }
   ]
 }

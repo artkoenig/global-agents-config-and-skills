@@ -11,9 +11,8 @@ Use this skill to finally secure the implementation of a feature, run the entire
 ## Workflow
 
 ### 1. Determine Active Feature
-- Try to determine the active feature from the current conversation context.
-- If unclear, read the file `.scratch/active-feature.txt` in the project root.
-- If the file does not exist or is empty, ask the user for the name of the feature (`<feature-slug>`).
+- Obtain the active feature slug by running `python3 .agents/skills/manage-feature/scripts/feature.py get-active`.
+- If no active feature is set, ask the user to run `/manage-feature` to set it.
 
 ### 2. Run Local Test Suite & Type Check
 - Determine the test command:
@@ -59,4 +58,4 @@ The Spec subagent compares the diff with the feature PRD located at `.scratch/<f
 ### 4. Conclusion
 - Ask the user if they want to make the recommended changes and refactorings.
 - If yes, execute the changes and refactorings and commit them. Run `/testing` again with the new state.
-- If no, or if no changes are recommended AND all issues of this feature have the status `resolved`, delete the `.scratch/active-feature.txt` and merge the feature branch into the main branch.
+- If no, or if no changes are recommended AND all issues of this feature have the status `resolved`, run `python3 .agents/skills/manage-feature/scripts/feature.py complete` to clear the active feature, and merge the feature branch into the main branch.
