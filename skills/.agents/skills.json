@@ -1,0 +1,10 @@
+{
+  "entries": [
+    { "path": "../neues-projekt" },
+    { "path": "../change-request" },
+    { "path": "../anforderungsanalyse" },
+    { "path": "../umsetzung" },
+    { "path": "../testen" },
+    { "path": "../alles-umsetzen" }
+  ]
+}
