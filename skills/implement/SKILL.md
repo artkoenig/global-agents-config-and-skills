@@ -1,5 +1,5 @@
 ---
-name: implementation
+name: implement
 description: Implements the open issues of the active feature sequentially using TDD (Test-Driven Development) at the agreed test seams.
 user-invocable: false
 ---
