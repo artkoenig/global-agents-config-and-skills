@@ -1,10 +1,10 @@
 {
   "entries": [
-    { "path": "../neues-projekt" },
+    { "path": "../new-project" },
     { "path": "../change-request" },
-    { "path": "../anforderungsanalyse" },
-    { "path": "../umsetzung" },
-    { "path": "../testen" },
-    { "path": "../alles-umsetzen" }
+    { "path": "../requirements-analysis" },
+    { "path": "../implementation" },
+    { "path": "../testing" },
+    { "path": "../implement-all" }
   ]
 }

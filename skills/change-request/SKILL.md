@@ -1,66 +1,66 @@
 ---
 name: change-request
-description: Erstellt einen neuen Change Request (Feature oder Bug) im Projekt, fügt ihn zur globalen PRD.md hinzu und bereitet den lokalen Workspace unter .scratch/ vor.
+description: Creates a new change request (feature or bug) in the project, adds it to the global PRD.md, and prepares the local workspace under .scratch/.
 disable-model-invocation: true
 ---
 
-# Change Request hinzufügen
+# Add Change Request
 
-Verwende diesen Skill, um dem Projekt einen neuen Change Request (Feature oder Bug) hinzuzufügen.
+Use this skill to add a new change request (feature or bug) to the project.
 
-## Ablauf
+## Workflow
 
-### 1. Change-Request-Informationen abfragen
-- Frage den Benutzer interaktiv nach dem **Namen des Change Requests**, dem **Typ (Feature oder Bug)** und einer kurzen **Beschreibung/Zweck**.
-- **Klären bei Bugs**: Falls es sich beim Change Request um einen Bug handelt, frage den Benutzer interaktiv nach dem **aktuellen Verhalten** (Ist-Zustand) und dem **erwarteten Verhalten** (Soll-Zustand), um den Fehler genau zu klären.
-- Generiere aus dem Namen automatisch einen URL- und ordnerkonformen **Change-Request-Slug** (z. B. `authentifizierung` oder `daten-export`, Kleinbuchstaben, Bindestriche statt Leerzeichen, Umlaute umwandeln).
-- **Existenz- und Statusprüfung**:
-  - Prüfe, ob der Change Request bereits existiert. Ein Change Request gilt als existierend, wenn entweder ein Eintrag in der globalen `PRD.md` unter `## Features` oder `## Change Requests` vorhanden ist oder das Verzeichnis `.scratch/<change-request-slug>/` existiert.
-  - Falls der Change Request existiert, bestimme seinen aktuellen Status:
-    - **Umgesetzt**: Alle im Verzeichnis `.scratch/<change-request-slug>/issues/` befindlichen Issues weisen den Status `Status: resolved` auf.
-    - **Geplant**: Das Verzeichnis `.scratch/<change-request-slug>/` existiert, aber es gibt noch offene/nicht aufgelöste Issues oder es wurden noch keine Issues angelegt.
-  - Wenn der Change Request bereits geplant oder umgesetzt wurde, informiere den Benutzer über den gefundenen Status und frage ihn interaktiv, wie verfahren werden soll (z. B. einen anderen Namen/Slug wählen, den bestehenden Workspace überschreiben oder den Vorgang abbrechen).
+### 1. Request Change Request Information
+- Interactively ask the user for the **name of the change request**, the **type (feature or bug)**, and a brief **description/purpose**.
+- **Clarification for bugs**: If the change request is a bug, interactively ask the user for the **current behavior** (actual state) and the **expected behavior** (target state) to precisely clarify the error.
+- Automatically generate a URL- and folder-compliant **change request slug** from the name (e.g., `authentication` or `data-export`, lowercase, hyphens instead of spaces, convert umlauts).
+- **Existence and Status Check**:
+  - Check if the change request already exists. A change request is considered existing if there is an entry in the global `PRD.md` under `## Features` or `## Change Requests`, or if the directory `.scratch/<change-request-slug>/` exists.
+  - If the change request exists, determine its current status:
+    - **Implemented**: All issues located in the directory `.scratch/<change-request-slug>/issues/` have the status `Status: resolved`.
+    - **Planned**: The directory `.scratch/<change-request-slug>/` exists, but there are still open/unresolved issues, or no issues have been created yet.
+  - If the change request has already been planned or implemented, inform the user of the found status and ask interactively how to proceed (e.g., choose a different name/slug, overwrite the existing workspace, or cancel the process).
 
-### 2. Globale PRD.md aktualisieren
-- Suche die projektweite `PRD.md` im Projekt-Root.
-- Trage den neuen Change Request in der Haupt-`PRD.md` unter der Sektion `## Features` bzw. `## Change Requests` als Listenpunkt ein:
+### 2. Update Global PRD.md
+- Locate the project-wide `PRD.md` in the project root.
+- Add the new change request to the main `PRD.md` under the section `## Features` or `## Change Requests` as a list item:
   ```markdown
-  - [Change Request Name](.scratch/<change-request-slug>/PRD.md): [Kurze Beschreibung]
+  - [Change Request Name](.scratch/<change-request-slug>/PRD.md): [Brief description]
   ```
 
-### 3. Change-Request-Workspace anlegen
-- Erstelle das Verzeichnis `.scratch/<change-request-slug>/` sowie das Unterverzeichnis `.scratch/<change-request-slug>/issues/`.
-- Schreibe den aktuellen Slug in die Statusdatei `.scratch/active-feature.txt` (überschreibe eventuell vorhandene alte Slugs):
+### 3. Create Change Request Workspace
+- Create the directory `.scratch/<change-request-slug>/` as well as the subdirectory `.scratch/<change-request-slug>/issues/`.
+- Write the current slug into the status file `.scratch/active-feature.txt` (overwrite any existing old slugs):
   ```
   <change-request-slug>
   ```
-- Erstelle eine PRD-Vorlage unter `.scratch/<change-request-slug>/PRD.md` mit folgenden Sektionen (passe die Beschreibung an, falls es ein Bug ist):
+- Create a PRD template under `.scratch/<change-request-slug>/PRD.md` with the following sections (adjust the description if it is a bug):
   ```markdown
   # PRD: [Change Request Name]
 
-  ## Problemstellung / Bug-Beschreibung
-  [Hier beschreiben, welches Problem der Benutzer hat oder wie sich der Bug äußert. Falls Bug: Aktuelles Verhalten vs. Erwartetes Verhalten dokumentieren]
+  ## Problem Statement / Bug Description
+  [Describe the problem the user is having or how the bug manifests here. If a bug: document Current Behavior vs. Expected Behavior]
 
-  ## Lösung
-  [Die vorgeschlagene Lösung aus Benutzersicht]
+  ## Solution
+  [The proposed solution from the user's perspective]
 
-  ## User Stories / Anforderungen
-  1. Als ein <Akteur>, möchte ich <Feature>, um <Nutzen> zu haben.
+  ## User Stories / Requirements
+  1. As an <Actor>, I want <Feature>, in order to achieve <Benefit>.
 
-  ## Technische Entscheidungen
-  - Betroffene Module:
-  - Technische Klärungen/Architekturentscheidungen:
-  - API-Verträge / Datenmodelle:
+  ## Technical Decisions
+  - Affected Modules:
+  - Technical Clarifications/Architectural Decisions:
+  - API Contracts / Data Models:
 
-  ## Test-Entscheidungen
-  - Zu testende Module:
-  - Test-Schnittstellen (Seams):
+  ## Testing Decisions
+  - Modules to Test:
+  - Test Interfaces (Seams):
 
   ## Out of Scope
-  - [Dinge, die nicht Teil dieses Change Requests sind]
+  - [Things that are not part of this change request]
   ```
 
-### 4. Fertigstellung (Handoff)
-- Erzeuge keinen Implementierungsplan (implementation_plan.md) und schreibe keinen Code. Starte keinesfalls mit der Implementierung.
-- Bestätige dem Benutzer, dass der Workspace für den Change Request `<change-request-slug>` erfolgreich angelegt wurde.
-- mache automatisch mit Skill `/anforderungsanalyse` weiter
+### 4. Completion (Handoff)
+- Do not generate an implementation plan (implementation_plan.md) and do not write code. Under no circumstances start with the implementation.
+- Confirm to the user that the workspace for the change request `<change-request-slug>` has been successfully created.
+- Automatically continue with the skill `/requirements-analysis`.
