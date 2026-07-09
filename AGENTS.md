@@ -31,6 +31,7 @@ For architectural decisions or cross-module refactoring, follow these principles
   Use polymorphism instead of excessive conditional checks (`if-else`/`when`).
 - **Composition over Inheritance:** Functionality should preferably be extended by composing objects (composition) rather than using deep inheritance hierarchies (inheritance).
 - **Modularization:** Subdivide large systems into loosely coupled, coherent modules or packages that can be developed, tested, and replaced independently.
+- **Avoid Leaky Abstractions:** Ensure that modules properly encapsulate their internal implementation details. Other components should only know the public interface and must not rely on or be aware of the underlying mechanics (e.g., specific scripts, file paths, or internal data structures).
 
 #### 3. Testability & Pragmatism
 
