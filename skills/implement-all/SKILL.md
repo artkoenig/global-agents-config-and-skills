@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Implement All (Automated Feature Implementation Loop)
 
-Use this skill to automatically analyze, implement, and test all open features of the project sequentially. This skill delegates the work for each feature/issue to specialized subagents that execute the existing skills (`requirements-analysis`, `implement`, and `testing`).
+Use this skill to automatically analyze, implement, and test all open features of the project sequentially. This skill delegates the work for each feature/issue to specialized subagents that execute the existing skills (`change-request`, `implement`, and `testing`).
 
 ## Workflow
 

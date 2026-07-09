@@ -2,7 +2,6 @@
   "entries": [
     { "path": "../new-project" },
     { "path": "../change-request" },
-    { "path": "../requirements-analysis" },
     { "path": "../implement" },
     { "path": "../testing" },
     { "path": "../implement-all" },

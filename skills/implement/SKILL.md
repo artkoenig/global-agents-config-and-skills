@@ -29,7 +29,7 @@ If not already done, create a branch for the issue named `feature/<feature-slug>
    - Run the test and verify that it is red (failing).
    
 2. **Green Phase**:
-   - Write code (strictly adhering to the guidelines in `CODE_GUIDELINES.md`) to make the failing test green (successful). Avoid speculative extensions or anticipating future tasks.
+   - Write code (strictly adhering to the guidelines in `AGENTS.md`) to make the failing test green (successful). Avoid speculative extensions or anticipating future tasks.
    - Run the test again and verify that it is green.
    
 3. **Refactoring Phase**:
