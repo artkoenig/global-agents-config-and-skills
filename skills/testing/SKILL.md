@@ -1,7 +1,7 @@
 ---
 name: testing
 description: Runs final tests and type checks for the active feature and initiates a local two-axis code review (Standards vs. Specification).
-user-invocable: false
+user-invocable: true
 ---
 
 # Testing and Verification
@@ -58,4 +58,5 @@ The Spec subagent compares the diff with the feature PRD located at `.scratch/<f
 ### 4. Conclusion
 - Ask the user if they want to make the recommended changes and refactorings.
 - If yes, execute the changes and refactorings and commit them. Run `/testing` again with the new state.
-- If no, or if no changes are recommended AND all issues of this feature have the status `resolved`, use the `/manage-feature` skill (action: `complete`) to clear the active feature, and merge the feature branch into the main branch.
+- If no, or if no changes are recommended AND all issues of this feature have the status `resolved`, use the `/manage-feature` skill (action: `complete`) to clear the active feature. 
+- Offer the user to push the feature branch to the remote repository and generate a Pull Request Description based on the PRD.

@@ -11,7 +11,9 @@ This skill provides a robust, deterministic Python script `scripts/feature.py` t
 
 ## Usage
 
-You can execute the script from the project root using `python3 .agents/skills/manage-feature/scripts/feature.py <command>`.
+The script `feature.py` is located in the `scripts/` directory of this skill. Since the skill may be installed globally (e.g., in `~/.gemini/config/skills/`) or locally in the project, you must dynamically locate its path before execution.
+
+You can execute the script using `python3 <path-to-manage-feature-skill>/scripts/feature.py <command>`.
 
 ### Available Commands:
 
