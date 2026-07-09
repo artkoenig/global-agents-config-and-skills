@@ -11,14 +11,14 @@ Use this skill to automatically analyze, implement, and test all open features o
 ## Workflow
 
 ### 1. Identify Open Features
-- Run `python3 .agents/skills/manage-feature/scripts/feature.py list-open-features` to get a list of all features that have at least one unresolved issue.
+- Use the `/manage-feature` skill (action: `list-open-features`) to get a list of all features that have at least one unresolved issue.
 - If no open features are found, the process is complete.
 
 ### 2. Implement Features Sequentially
 Go through all open features one by one. For each open feature, execute the following steps completely automatically:
 
 #### Step A: Activate Feature & Prepare Branch
-- Set the current feature as active by running `python3 .agents/skills/manage-feature/scripts/feature.py set-active <feature-slug>`.
+- Set the current feature as active by using the `/manage-feature` skill (action: `set-active`).
 - Ensure that the git branch for the feature exists and is active. The branch name follows the pattern `feature/<feature-slug>`. If the branch does not exist, create it and check it out.
 
 #### Step B: Spawn Subagents for Implementation & Testing

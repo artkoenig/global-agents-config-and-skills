@@ -11,12 +11,12 @@ Use this skill to systematically process the issues of the active feature.
 ## Workflow
 
 ### 1. Determine Active Feature
-- Obtain the active feature slug by running `python3 .agents/skills/manage-feature/scripts/feature.py get-active`.
+- Obtain the active feature slug by using the `/manage-feature` skill (action: `get-active`).
 - If no active feature is set, ask the user to run `/manage-feature` to set it.
 
 ### 2. Find Next Unblocked Issue
-- Find the next unblocked issue by running `python3 .agents/skills/manage-feature/scripts/feature.py next-issue`.
-- Change the status of the selected issue to `claimed` by running `python3 .agents/skills/manage-feature/scripts/feature.py update-issue <issue-path> claimed`.
+- Find the next unblocked issue by using the `/manage-feature` skill (action: `next-issue`).
+- Change the status of the selected issue to `claimed` by using the `/manage-feature` skill (action: `update-issue`).
 - Present the selected issue and its acceptance criteria to the user in the chat.
 - During the subsequent implementation, only implement what was described in the found issue. Do not anticipate unimplemented issues in this ticket.
 
@@ -42,7 +42,7 @@ If not already done, create a branch for the issue named `feature/<feature-slug>
 
 ### 4. Resolve Issue
 - As soon as all acceptance criteria of the issue are met and all tests pass successfully, update the issue file:
-  - Set the status to `Status: resolved` by running `python3 .agents/skills/manage-feature/scripts/feature.py update-issue <issue-path> resolved`.
+  - Set the status to `Status: resolved` by using the `/manage-feature` skill (action: `update-issue`).
   - Append a short summary of the solution under the heading `## Answer` (or `## Solution`).
 - Make a git commit for the resolved issue on the local branch.
 

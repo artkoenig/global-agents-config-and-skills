@@ -29,7 +29,7 @@ Use this skill to add a new change request (feature or bug) to the project.
   ```
 
 ### 3. Create Change Request Workspace
-- Initialize the workspace by executing: `python3 .agents/skills/manage-feature/scripts/feature.py init <change-request-slug> "[Change Request Name]"` (replacing the placeholders with the actual slug and name).
+- Initialize the workspace by using the `/manage-feature` skill (action: `init`, passing the slug and name).
 - Open the newly created `.scratch/<change-request-slug>/PRD.md` and document the gathered information (Problem Statement, Solution, etc.).
 
 ### 4. Completion (Handoff)
