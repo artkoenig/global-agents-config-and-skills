@@ -24,16 +24,14 @@ Use this skill to secure the current changes: run the entire local test suite, r
   - A non-zero exit code is a **blocking** failure and must be resolved before proceeding, exactly like a failing test. Findings that do not fail the command (advisory) are recorded in the report but do not block.
 
 ### 2. Two-Axis Code Review
-Conduct a review of the current changes.
+Conduct a review along two axes. Each axis operates on a different scope:
+- **Axis A (Standards)** reviews the **entire codebase**, not only the changes.
+- **Axis B (Specification)** reviews the **diff** of the current changes.
 
-- **Determine Diff Base Point**:
-  - Determine the merge base of the current branch against the main branch (default `main` or `master` via `git merge-base main HEAD`). If `main`/`master` do not exist or are unclear, ask the user for the comparison branch or commit.
-  - Run `git diff <merge-base>` to capture the changes. This intentionally includes both committed branch changes and the uncommitted working tree, so the review covers the full current state.
-
-Spawn subagents to independently review the diff along the following axes:
+Spawn subagents to independently review along the following axes:
 
 #### Axis A: Standards (Coding Guidelines & Code Smells)
-The Standards subagent checks the diff against the project's coding guidelines in effect (do not assume a specific filename) as well as against the following heuristics for code smells:
+The Standards subagent reviews the **complete codebase** (not just the diff) against the project's coding guidelines in effect (do not assume a specific filename) as well as against the following heuristics for code smells:
 - **Mysterious Name**: Unclear function, variable, or type names.
 - **Duplicated Code**: Identical or very similar logic structures across multiple lines/files.
 - **Feature Envy**: A method accesses the data of another object more than its own.
@@ -48,7 +46,10 @@ The Standards subagent checks the diff against the project's coding guidelines i
 #### Axis B: Specification (optional)
 This axis only runs if a specification source is available. A specification is any document describing what the change is supposed to do (e.g., a spec/PRD file, a ticket, or a path the user provides when invoking the skill).
 - If no specification source is provided or found, **skip this axis** and note in the report that no specification was available.
-- If a specification source is available, the Spec subagent compares the diff against it:
+- **Determine the diff base point** for this axis:
+  - Determine the merge base of the current branch against the main branch (default `main` or `master` via `git merge-base main HEAD`). If `main`/`master` do not exist or are unclear, ask the user for the comparison branch or commit.
+  - Run `git diff <merge-base>` to capture the changes. This intentionally includes both committed branch changes and the uncommitted working tree, so the review covers the full current state.
+- The Spec subagent compares the diff against the specification:
   - **Missing Requirements**: Which requirements described in the specification were not implemented or only partially implemented?
   - **Scope Creep**: What changes were implemented that the specification didn't ask for at all?
   - **Flawed Logic**: Where does the implementation look faulty or deviate from the specification?
