@@ -18,15 +18,16 @@ Use this skill to set up a new project on your local machine.
 ### 2. Initialize Git
 - Check in the current working directory if a git repository already exists (e.g., via `git status` or the presence of `.git`).
 - If not, initialize it by executing `git init`.
+- Ensure the project's `.gitignore` contains an entry for `.scratch/` (transient agent working files such as `.scratch/analysis.md` must not be committed). Create `.gitignore` if it does not exist, and append the `.scratch/` entry only if it is not already present.
 
 ### 3. Create Directory Structure & Configurations
-- Create the `.scratch/` directory in the project root directory.
+- Create the `docs/features/` directory in the project root directory.
 - Configure local issue tracking automatically and silently by creating the following configuration files:
   
   - **`docs/agents/issue-tracker.md`**:
     ```markdown
     # Issue tracker: Local Markdown
-    Issues and PRDs for this repo are located as markdown files under `.scratch/`.
+    Issues and PRDs for this repo are located as markdown files under `docs/features/`.
     ```
     
   - **`docs/agents/triage-labels.md`**:
@@ -54,7 +55,7 @@ Use this skill to set up a new project on your local machine.
   ## Agent skills
 
   ### Issue tracker
-  Local markdown tracking under `.scratch/`. See `docs/agents/issue-tracker.md`.
+  Local markdown tracking under `docs/features/`. See `docs/agents/issue-tracker.md`.
 
   ### Triage labels
   Local status labels. See `docs/agents/triage-labels.md`.

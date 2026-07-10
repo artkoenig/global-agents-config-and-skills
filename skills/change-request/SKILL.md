@@ -17,7 +17,7 @@ Use this skill to either add a new change request to the project or deeply analy
   - Generate a slug.
   - Initialize the workspace by using the `/manage-feature` skill (action: `init`, passing the slug and name).
   - Update the global `PRD.md` in the project root by adding the new change request under `## Features` or `## Change Requests`:
-    `- [Change Request Name](.scratch/<slug>/PRD.md): [Brief description]`
+    `- [Change Request Name](docs/features/<slug>/PRD.md): [Brief description]`
 - **If existing:**
   - Obtain the active feature slug by using the `/manage-feature` skill (action: `get-active`).
   - If no active feature is set, ask the user to set it, or use the `/manage-feature` skill (action: `set-active`) if you know the slug.
@@ -48,7 +48,7 @@ Use this skill to either add a new change request to the project or deeply analy
 - Present the proposed interfaces to the user in the chat for approval. Do not write tests before the test interfaces are agreed upon.
 
 ### 5. Complete Feature PRD
-- Synthesize the findings from the discussion and codebase analysis and complete the file `.scratch/<feature-slug>/PRD.md` (e.g., problem statement, solution, user stories, technical decisions like data structures or API contracts, as well as the test interfaces).
+- Synthesize the findings from the discussion and codebase analysis and complete the file `docs/features/<feature-slug>/PRD.md` (e.g., problem statement, solution, user stories, technical decisions like data structures or API contracts, as well as the test interfaces).
 - Do **not** conduct another interview with the user for this – instead, use the knowledge already acquired in step 3.
 
 ### 6. Break Down into Vertical Issues (Tracer Bullets)
@@ -62,14 +62,14 @@ Use this skill to either add a new change request to the project or deeply analy
   - Is the granularity appropriate?
   - Are the dependencies correct?
   - Should tasks be merged or further split?
-- Once the user approves the breakdown, create a file for each issue under `.scratch/<feature-slug>/issues/NN-<slug>.md` (numbered starting from `01`), using the following structure:
+- Once the user approves the breakdown, create a file for each issue under `docs/features/<feature-slug>/issues/NN-<slug>.md` (numbered starting from `01`), using the following structure:
   ```markdown
   Status: ready-for-agent
   Type: task
   Blocked by: [List of NN, or "None"]
 
   ## Parent
-  Reference to the Feature PRD: `.scratch/<feature-slug>/PRD.md`
+  Reference to the Feature PRD: `docs/features/<feature-slug>/PRD.md`
 
   ## What to Build
   [Short, precise description of the end-to-end behavior. Avoid concrete file paths, as they become outdated quickly.]
@@ -85,4 +85,3 @@ Use this skill to either add a new change request to the project or deeply analy
 ### 7. Completion (Handoff)
 - Do not generate an implementation plan (implementation_plan.md) and do not write code. Under no circumstances start with the implementation.
 - Inform the user that the requirements analysis is complete.
-- Advise the user that they can now run the `/implement-all` command to start the implementation of the feature/CR.

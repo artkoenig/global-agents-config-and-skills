@@ -1,6 +1,6 @@
 ---
 name: implement-with-ticket
-description: Sequentially processes the open tickets/issues of the active feature from the local ticket workspace (`.scratch/` with an active feature), delegating the actual coding to the code-generation-principles. Use only when this local ticket/feature setup is present; for ad-hoc code changes without it, do not use this skill.
+description: Sequentially processes the open tickets/issues of the active feature from the local ticket workspace (`docs/features/` with an active feature), delegating the actual coding to the code-generation-principles. Use only when this local ticket/feature setup is present; for ad-hoc code changes without it, do not use this skill.
 user-invocable: true
 ---
 
@@ -27,5 +27,5 @@ Process the issues one after another; for each open issue, repeat steps 2–4.
 - For the actual coding, follow the `code-generation-principles` skill (meaningful names, SRP, comprehensive unit tests, etc.).
 - After implementing, run the project's test suite and verify that all tests pass and the issue's acceptance criteria are met.
 
-### 5. Completion (Handoff)
+### 4. Completion (Handoff)
 - Provide the user with a brief summary of the changes made and the status of the git repository.
