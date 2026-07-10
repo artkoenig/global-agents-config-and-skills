@@ -2,9 +2,13 @@
   "entries": [
     { "path": "../new-project" },
     { "path": "../change-request" },
-    { "path": "../implement" },
+    { "path": "../implement-with-ticket" },
+    { "path": "../resolve-ticket" },
     { "path": "../testing" },
     { "path": "../implement-all" },
-    { "path": "../manage-feature" }
+    { "path": "../manage-feature" },
+    { "path": "../architecture-principles" },
+    { "path": "../code-generation-principles" },
+    { "path": "../git-principles" }
   ]
 }
