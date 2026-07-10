@@ -1,28 +1,22 @@
 ---
 name: testing
-description: Runs the local test suite and performs an agnostic two-axis code review - Standards (static analysis plus code-smell review over the whole codebase) and, if a specification is provided, Specification (review of the diff).
+description: Performs an agnostic three-axis verification of the current changes - Standards (static analysis plus code-smell review over the whole codebase), Specification (review of the diff, optional), and Tests (running the local test suite).
 user-invocable: true
 ---
 
 # Testing and Verification
 
-Use this skill to secure the current changes: run the entire local test suite and perform a two-axis code review. Axis A runs static analysis and a code-smell/standards review over the whole codebase; Axis B (optional) reviews the diff against a specification. The skill is agnostic - it works on any repository and does not depend on a feature/issue workspace.
+Use this skill to secure the current changes with a three-axis verification. Axis A runs static analysis and a code-smell/standards review over the whole codebase, Axis B (optional) reviews the diff against a specification, and Axis C runs the local test suite. The skill is agnostic - it works on any repository and does not depend on a feature/issue workspace.
 
 ## Workflow
 
-### 1. Run Local Test Suite
-- Determine the test command:
-  - Read `.scratch/test-command.txt` if it exists.
-  - If not present, analyze the files in the project root (e.g., presence of `package.json` -> `npm test` or `vitest`; `Cargo.toml` -> `cargo test`; `requirements.txt` -> `pytest`).
-  - If it cannot be clearly determined, ask the user once for the test command and save it in `.scratch/test-command.txt`.
-- Execute the test command and ensure that **all** tests of the project pass successfully (are green). A failing test is a **blocking** failure: report the failing output and resolve it (or ask the user how to proceed) before continuing.
-
-### 2. Two-Axis Code Review
-Conduct a review along two axes. Each axis operates on a different scope:
+### 1. Three-Axis Verification
+Conduct the verification along three axes. Each axis operates on a different scope and runs independently:
 - **Axis A (Standards)** reviews the **entire codebase**, not only the changes.
 - **Axis B (Specification)** reviews the **diff** of the current changes.
+- **Axis C (Tests)** runs the project's **test suite**.
 
-Spawn subagents to independently review along the following axes:
+Spawn subagents to independently work the following axes in parallel:
 
 #### Axis A: Standards (Static Analysis, Coding Guidelines & Code Smells)
 The Standards subagent reviews the **complete codebase** (not just the diff).
@@ -58,11 +52,19 @@ This axis only runs if a specification source is available. A specification is a
   - **Scope Creep**: What changes were implemented that the specification didn't ask for at all?
   - **Flawed Logic**: Where does the implementation look faulty or deviate from the specification?
 
-#### Consolidation
-- Present the reports of the subagents separately under the headings `## Standards` and (if run) `## Specification`.
-- Summarize the result in one line (number of findings per axis as well as the most critical comment per axis).
+#### Axis C: Tests
+The Tests subagent runs the project's test suite:
+- Determine the test command:
+  - Read `.scratch/test-command.txt` if it exists.
+  - If not present, analyze the files in the project root (e.g., presence of `package.json` -> `npm test` or `vitest`; `Cargo.toml` -> `cargo test`; `requirements.txt` -> `pytest`).
+  - If it cannot be clearly determined, ask the user once for the test command and save it in `.scratch/test-command.txt`.
+- Execute the test command and ensure that **all** tests of the project pass successfully (are green). A failing test is a **blocking** failure: report the failing output so it can be resolved (or ask the user how to proceed).
 
-### 3. Conclusion
-- Ask the user if they want to make the recommended changes and refactorings.
+#### Consolidation
+- Present the reports of the subagents separately under the headings `## Standards`, `## Specification` (if run), and `## Tests`.
+- Summarize the result in one line (number of findings per axis as well as the most critical comment per axis, plus whether the test suite is green).
+
+### 2. Conclusion
+- Ask the user if they want to make the recommended changes and refactorings (including fixing any failing tests or blocking analysis findings).
 - If yes, execute the changes and refactorings, commit them, and run `/testing` again with the new state.
-- If no (or if there are no findings), the review is complete. Report the final green status of tests and analysis together with the review summary.
+- If no (or if there are no findings), the verification is complete. Report the final green status of tests and analysis together with the review summary.
