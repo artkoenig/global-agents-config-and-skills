@@ -11,7 +11,7 @@ Run the configured static analysis as a gate, then review the codebase for the j
 You receive these in your prompt:
 
 - **repo_root**: Path to the repository to review.
-- **analysis_command_file**: Path to `.scratch/analysis-command.txt` (may be absent).
+- **analysis_command_file**: Path to a file listing the project's static-analysis commands (one per line). Provided by the caller, or discovered in the repo by its conventional name `analysis-command.txt`; may be absent.
 - **analysis_output_file**: Where to write the combined analysis output (e.g. `.scratch/analysis.md`).
 - **guidelines**: The project's documented coding guidelines in effect, if any. Do not assume a specific filename — discover what the project actually uses.
 

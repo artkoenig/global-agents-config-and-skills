@@ -11,7 +11,7 @@ Find the right test command, run it, and report the result clearly. A failing su
 You receive these in your prompt:
 
 - **repo_root**: Path to the repository.
-- **test_command_file**: Path to `.scratch/test-command.txt` (may be absent).
+- **test_command_file**: Path to a file containing the project's test command. Provided by the caller, or discovered in the repo by its conventional name `test-command.txt`; may be absent.
 
 ## Process
 

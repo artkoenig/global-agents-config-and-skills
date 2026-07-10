@@ -13,10 +13,15 @@ Read the specification, capture the diff, and judge whether the implementation m
 You receive these in your prompt:
 
 - **repo_root**: Path to the repository.
-- **spec_source**: The specification to compare against. This is any document describing what the change is supposed to do — a spec/PRD file, a ticket, or a path the user provided when invoking the skill.
+- **spec_source**: The specification to compare against. This is any document (or set of documents) describing what the change is supposed to do — a **folder of acceptance criteria** (e.g. a feature's `issues/` directory), a spec/PRD file, a ticket, or a path provided when invoking the skill. If the path is a directory, treat every acceptance-criteria/issue file within it as part of the specification.
 - **main_branch**: The branch to diff against (default `main` or `master`).
 
 ## Process
+
+### Step 0: Resolve the specification source
+
+- If `spec_source` is a directory, enumerate the acceptance-criteria files inside it (recursively) and read each one. Collect their `## Acceptance Criteria` sections (or, absent that heading, the whole file) into a single set of requirements to verify.
+- If `spec_source` is a single file or ticket, read it directly.
 
 ### Step 1: Determine the diff base point
 
