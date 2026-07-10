@@ -12,7 +12,7 @@ You receive these in your prompt:
 
 - **repo_root**: Path to the repository to review.
 - **analysis_command_file**: Path to `.scratch/analysis-command.txt` (may be absent).
-- **analysis_output_file**: Where to write the combined analysis output (e.g. `.scratch/analysis/latest.md`).
+- **analysis_output_file**: Where to write the combined analysis output (e.g. `.scratch/analysis.md`).
 - **guidelines**: The project's documented coding guidelines in effect, if any. Do not assume a specific filename — discover what the project actually uses.
 
 ## Process
