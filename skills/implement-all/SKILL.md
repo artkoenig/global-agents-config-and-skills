@@ -24,7 +24,7 @@ Go through all open features one by one. For each open feature, execute the foll
 #### Step B: Spawn Subagents for Implementation & Testing
 - Spawn a subagent for the active feature. The subagent receives the task:
   1. **Implementation**: Execute the `/implement` skill. Go through all open issues of the feature one by one and implement them using TDD (Red-Green-Refactor) until all issues have the status `Status: resolved`.
-  2. **Testing**: Immediately afterward, execute the `/testing` skill (run the complete test suite, type checking/linter, two-axis code review: Standards vs. Specification).
+  2. **Testing**: Immediately afterward, execute the `/testing` skill (run the complete test suite, static analysis, two-axis code review: Standards vs. Specification).
 - If the subagent reports errors or gets stuck, interrupt the loop and inform the user.
 - Ensure that the main branch is checked out and clean.
 
