@@ -1,6 +1,6 @@
 ---
 name: grill-me-for-spec
-description: Interactive requirements-analysis and domain-modeling session that turns a vague idea, feature request, or bug into a written specification (a PRD file). It relentlessly grills the user one question at a time, researches the codebase, refines the domain glossary (CONTEXT.md) and architectural decision records (ADRs) as it goes, and writes a completed PRD as its output. Use this whenever the user wants to specify a new feature or change, flesh out requirements, "think through" or "spec out" something before building, analyze a bug's real cause, or produce a PRD — for either a whole project or a single issue. Trigger it on phrases like "help me spec this", "grill me", "let's nail down the requirements", "write a PRD for", or when a request is too underspecified to implement safely. Do not use it to break a finished spec into tasks (that is the issue-tracker decompose workflow) or to write code.
+description: Interactive requirements-analysis and domain-modeling session that turns a vague idea, feature request, or bug into a written specification (a PRD file). It relentlessly grills the user one question at a time, researches the codebase, refines the domain glossary (CONTEXT.md) and architectural decision records (ADRs) as it goes, and writes a completed PRD as its output. Use this whenever the user wants to specify a new feature or change, flesh out requirements, "think through" or "spec out" something before building, analyze a bug's real cause, or produce a PRD — for either a whole project or a single feature or change. Trigger it on phrases like "help me spec this", "grill me", "let's nail down the requirements", "write a PRD for", or when a request is too underspecified to implement safely. Do not use it to break a finished spec into tasks or to write code.
 user-invocable: true
 ---
 
@@ -8,8 +8,9 @@ user-invocable: true
 
 Turn a rough idea, feature request, or bug into a precise, written specification
 (a PRD). The goal is a **shared, unambiguous understanding** captured on disk —
-not an implementation plan and not code. The output PRD is what the
-`issue-tracker` decompose workflow later slices into implementable issues.
+not an implementation plan and not code. The PRD is the sole output: a
+self-contained file that a downstream decomposition or planning step can later
+turn into implementable work.
 
 This skill deliberately "grills": it asks hard questions and challenges vague or
 overloaded language, because most implementation risk comes from
@@ -21,8 +22,8 @@ Establish the essentials before grilling:
 
 - Is this a **feature** or a **bug**? For a bug, capture current vs. expected
   behavior.
-- What is the target of the spec — a whole **project** or a single **issue**?
-  This decides where the PRD lands (see step 6).
+- What is the target of the spec — a whole **project** or a single **feature or
+  change**? This frames how broadly to grill and where the PRD lands (see step 6).
 - Get a one-paragraph description in the user's own words.
 
 ## 2. Context & codebase analysis
@@ -71,13 +72,15 @@ Synthesize everything from the discussion and codebase analysis into a completed
 PRD, following [reference/PRD-FORMAT.md](reference/PRD-FORMAT.md). Do **not** run
 another interview for this — use the understanding already gained in step 3.
 
-## 6. Place the output & hand off
+## 6. Write the output & stop
 
-- **Project-level spec:** write `PRD.md` in the project root.
-- **Issue-level spec:** the PRD is the parent issue's specification. Either write
-  it into that issue's `## Description` (its `issue.md`), or create the parent
-  issue via the `issue-tracker` skill and put the PRD there.
+Write the completed PRD to a single self-contained file:
+
+- **Default:** `PRD.md` in the project root.
+- **Custom location:** if the user or the invoking workflow named a target path,
+  write the PRD there instead. This is how a spec for a single feature within a
+  larger project is placed where its owner expects it.
 
 Then stop. Do not generate an implementation plan and do not write code. Tell the
-user the specification is complete and that it can now be broken down into issues
-via the `issue-tracker` skill's decompose workflow.
+user the specification is complete, state where the PRD was written, and that it
+is ready to be broken down into tasks or handed to a planning step.

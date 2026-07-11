@@ -5,9 +5,9 @@ grilling session. It captures the shared understanding reached with the user —
 the problem, the chosen solution, the requirements, and the key technical and
 testing decisions — without drifting into an implementation plan.
 
-The PRD is the **output** of `grill-me-for-spec` and the **input** to
-decomposition: it becomes a parent issue's `## Description`, which the
-`issue-tracker` decompose workflow slices into child issues.
+The PRD is the **output** of `grill-me-for-spec` and the **input** to any
+downstream decomposition or planning step that slices the specification into
+implementable work.
 
 ## Structure
 
