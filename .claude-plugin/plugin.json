@@ -1,0 +1,9 @@
+{
+  "name": "artkoenig-skills",
+  "version": "0.1.0",
+  "description": "Personal engineering-workflow skills bundle: grill-me-for-spec, issue-tracker, architecture / code-generation / git principles, testing, and skill-creator. Bundles the repository's skills/ directory.",
+  "author": {
+    "name": "Artjom König",
+    "email": "artkoenig@gmail.com"
+  }
+}

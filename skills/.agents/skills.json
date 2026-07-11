@@ -1,11 +1,8 @@
 {
   "entries": [
-    { "path": "../new-project" },
-    { "path": "../change-request" },
-    { "path": "../implement-with-ticket" },
-    { "path": "../resolve-ticket" },
+    { "path": "../grill-me-for-spec" },
+    { "path": "../issue-tracker" },
     { "path": "../testing" },
-    { "path": "../manage-feature" },
     { "path": "../architecture-principles" },
     { "path": "../code-generation-principles" },
     { "path": "../git-principles" }
