@@ -3,6 +3,7 @@
     { "path": "../grill-me-for-spec" },
     { "path": "../issue-tracker" },
     { "path": "../testing" },
+    { "path": "../skill-creator" },
     { "path": "../architecture-principles" },
     { "path": "../code-generation-principles" },
     { "path": "../git-principles" }

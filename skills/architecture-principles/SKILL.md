@@ -1,6 +1,7 @@
 ---
 name: architecture-principles
 description: Architectural principles for state management (UDF, SSOT, Immutability), extensibility and modularity (OCP, Composition over Inheritance, Modularization, no leaky abstractions), and testability (DI, KISS). Use when making architectural decisions, choosing between technologies or design patterns, defining module or component boundaries, or performing cross-module refactoring.
+user-invocable: false
 ---
 
 # Architecture Principles

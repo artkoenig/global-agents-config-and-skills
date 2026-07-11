@@ -1,6 +1,7 @@
 ---
 name: git-principles
 description: Git and version-control workflow rules that apply whenever the files being worked on are versioned (tracked in a git repository). Use before making any change to versioned files, and when committing, branching, or pushing: verify the files are versioned, print the current branch and ask whether to use it or create a new branch, never commit or push automatically, and never add the agent as commit co-author.
+user-invocable: false
 ---
 
 # Git & Version-Control Principles

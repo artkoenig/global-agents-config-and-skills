@@ -1,6 +1,7 @@
 ---
 name: code-generation-principles
 description: Code quality principles (Meaningful Names, Single Responsibility, short functions with a single level of abstraction, no magic values, minimized side effects, self-explanatory code, DRY, robust error handling, comprehensive unit tests, YAGNI). Use whenever writing, generating, or refactoring code.
+user-invocable: false
 ---
 
 # Code Generation Principles
