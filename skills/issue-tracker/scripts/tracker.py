@@ -55,8 +55,12 @@ This project tracks work as local markdown issues under `docs/issues/`, managed
 through the `issue-tracker` skill. Everything is an *issue*: a directory
 `NN-<slug>/` with an `issue.md`; features are issues with child issues nested
 inside them. Do not edit issue files by hand — use the `issue-tracker` skill so
-status transitions stay valid. See `docs/agents/issue-tracker.md` for the state
-model.
+status transitions stay valid.
+
+When asked to change or add code, first judge the scope. Implement a small,
+self-contained change directly. For anything larger, create an issue for it
+first (`tracker.py create`), then implement it through the tracked workflow in
+`docs/agents/issue-tracker.md` (which also documents the state model).
 """
 
 TRACKER_DOC = """# Issue tracker: local markdown
@@ -86,6 +90,23 @@ Allowed transitions:
 - `resolved` -> `ready-for-agent` (reopen)
 
 A parent issue cannot become `resolved` while any child is still open.
+
+## Implementing an issue
+Work issues one at a time. For each:
+1. Pick the next actionable issue with `tracker.py next` (add `--parent <id>` to
+   focus on one feature). It returns the next `ready-for-agent` leaf whose
+   blockers are all `resolved`. If nothing is returned, there is no ready work.
+2. Claim it: `tracker.py set-status <id> claimed`, and read it with
+   `tracker.py show <id>`.
+3. Implement **only** what that issue specifies — do not anticipate other issues.
+   Work in small increments on a branch (e.g. `issue/<slug>`), following this
+   project's engineering principles (meaningful names, single responsibility,
+   comprehensive tests).
+4. Run the test suite; verify all tests pass and the acceptance criteria are met.
+5. Resolve it: append a short solution summary with
+   `tracker.py comment <id> "..."`, then `tracker.py set-status <id> resolved`.
+
+Repeat until `next` reports no ready issues.
 
 ## Do not hand-edit
 Manage issues through the `issue-tracker` skill's `tracker.py` so that the state

@@ -1,6 +1,6 @@
 ---
 name: issue-tracker
-description: Local, file-based issue tracker for a project. Everything is an issue — a directory under docs/issues/ with an issue.md — and issues nest to form features (an issue with child issues is a feature; its issue.md is the spec). Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved), to find the next issue ready for implementation, to break a specification down into child issues, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
+description: Local, file-based issue tracker for a project. Everything is an issue — a directory under docs/issues/ with an issue.md — and issues nest to form features (an issue with child issues is a feature; its issue.md is the spec). Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved), to find and implement the next issue ready for work (claim → implement → resolve, one at a time), to break a specification down into child issues, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", "implement the next issue", working through tickets, breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
 user-invocable: true
 ---
 
@@ -69,6 +69,9 @@ their own guides — read them when you reach that step:
   a project or for a parent issue) and must be turned into implementable,
   vertically-sliced child issues, follow
   [workflows/decompose.md](workflows/decompose.md).
+- **Implementing tracked issues** — to work through the open issues (claim →
+  implement → resolve, one at a time), follow
+  [workflows/implement.md](workflows/implement.md).
 - **Resolving an implemented issue** — when an issue has been implemented and its
   tests pass, follow [workflows/resolve.md](workflows/resolve.md) to record the
   outcome and set `resolved`.
@@ -89,7 +92,7 @@ python3 <skill>/scripts/tracker.py create --title "Login crashes on empty passwo
 ```bash
 ID=$(python3 <skill>/scripts/tracker.py next)
 python3 <skill>/scripts/tracker.py set-status "$ID" claimed
-# ...implement (see the implement-with-ticket skill), then:
+# ...implement (see workflows/implement.md), then:
 python3 <skill>/scripts/tracker.py set-status "$ID" resolved
 ```
 
@@ -97,5 +100,7 @@ python3 <skill>/scripts/tracker.py set-status "$ID" resolved
 
 - **grill-me-for-spec** produces a specification (PRD). That PRD becomes a parent
   issue's `issue.md`, which the decompose workflow slices into child issues.
-- **implement-with-ticket** consumes this tracker: it calls `next`, sets
-  `claimed`, implements, and finishes via the resolve workflow.
+- Implementation of tracked issues is handled by this skill's
+  [implement workflow](workflows/implement.md); `init` also writes that workflow
+  into the project's `docs/agents/issue-tracker.md`, so an agent working an
+  initialized repo knows the loop without invoking a skill.

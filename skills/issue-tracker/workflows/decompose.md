@@ -63,5 +63,5 @@ description behavior-focused; avoid hardcoding file paths that go stale.
 ## 5. Handoff
 
 Do not write implementation code here. Tell the user the breakdown is complete and
-that implementation can proceed via the `implement-with-ticket` skill, which will
-pick up issues with `next`.
+that implementation can proceed via the [implement workflow](implement.md), which
+picks up issues with `next`.

@@ -21,4 +21,4 @@ verified — `resolved` means "implemented and passing".
    subtree is done.
 
 3. **Continue.** If more issues remain, pick up the next one with
-   `tracker.py next` (typically via the `implement-with-ticket` skill).
+   `tracker.py next` (see the [implement workflow](implement.md)).
