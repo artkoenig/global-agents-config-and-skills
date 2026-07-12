@@ -5,6 +5,8 @@
 - Once that PRD exists, ask whether to set up issue tracking and break it into issues via the `issue-tracker` skill.
 - Critically challenge all requested changes. Before implementing or accepting any modification, verify it against the existing documentation files to ensure consistency and prevent contradictions. Keep documentation always up-to-date.
 - When I ask you to investigate a matter, do not make any changes to existing files. Clarify the matter and provide an explanation with a recommendation.
+- If you are uncertain during implementation and need to consult the web, place absolute priority on official documentation without exception. Conduct an intensive deep search directly on official developer sites or API references, to find the exact solution before considering secondary sources (such as forums or blogs).
+
 
 ## Engineering Principles
 
