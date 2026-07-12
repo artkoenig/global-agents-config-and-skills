@@ -3,6 +3,7 @@
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user experiences it. This makes sure you find the real problem so your fix will actually solve it.
 - When starting a new project, use the `grill-me-for-spec` skill to turn the idea into a written specification (PRD) before building.
 - Once that PRD exists, ask whether to set up issue tracking and break it into issues via the `issue-tracker` skill.
+- When a project has issue tracking set up (a `docs/issues/` directory exists, or `ISSUE_TRACKER_DIR` is set), do not begin code changes before asking me whether to create an issue for the work first. If I say yes, file it via the `issue-tracker` skill and proceed through the tracked workflow; if I decline, implement directly.
 - Critically challenge all requested changes. Before implementing or accepting any modification, verify it against the existing documentation files to ensure consistency and prevent contradictions. Keep documentation always up-to-date.
 - When I ask you to investigate a matter, do not make any changes to existing files. Clarify the matter and provide an explanation with a recommendation.
 - If you are uncertain during implementation and need to consult the web, place absolute priority on official documentation without exception. Conduct an intensive deep search directly on official developer sites or API references, to find the solution before considering secondary sources (such as forums or blogs).

@@ -57,10 +57,8 @@ through the `issue-tracker` skill. Everything is an *issue*: a directory
 inside them. Do not edit issue files by hand — use the `issue-tracker` skill so
 status transitions stay valid.
 
-When asked to change or add code, first judge the scope. Implement a small,
-self-contained change directly. For anything larger, create an issue for it
-first (`tracker.py create`), then implement it through the tracked workflow in
-`docs/agents/issue-tracker.md` (which also documents the state model).
+See `docs/agents/issue-tracker.md` for the state model and the workflow for
+implementing tracked issues.
 """
 
 TRACKER_DOC = """# Issue tracker: local markdown
