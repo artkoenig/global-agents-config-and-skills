@@ -60,7 +60,21 @@ python3 <skill>/scripts/tracker.py create \
 Then fill each issue's `## Description` and `## Acceptance Criteria`. Keep the
 description behavior-focused; avoid hardcoding file paths that go stale.
 
-## 5. Handoff
+## 5. Advance the parent
+
+The parent is now fully specified and sliced, so it is no longer awaiting triage.
+Move it to `ready-for-agent` so its status reflects reality and its lifecycle can
+later reach `resolved` (via `claimed`):
+
+```bash
+python3 <skill>/scripts/tracker.py set-status "<parent-id>" ready-for-agent
+```
+
+This is a status change on the parent only — `next` still returns just leaf
+issues, so implementation is unaffected. The parent stays open until its whole
+subtree is `resolved` (enforced by the parent/child rule).
+
+## 6. Handoff
 
 Do not write implementation code here. Tell the user the breakdown is complete and
 that implementation can proceed via the [implement workflow](implement.md), which

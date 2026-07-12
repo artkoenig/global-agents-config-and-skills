@@ -39,6 +39,7 @@ recursively: a feature is only "done" once its whole subtree is done.
 
 - New bug reports and ideas start at `needs-triage`.
 - The decompose workflow creates child issues directly at `ready-for-agent`,
-  because they come from an already-specified parent.
+  because they come from an already-specified parent, and advances the parent
+  itself to `ready-for-agent` once it has been sliced.
 - `next` only ever returns `ready-for-agent` leaf issues whose blockers are
   `resolved`.
