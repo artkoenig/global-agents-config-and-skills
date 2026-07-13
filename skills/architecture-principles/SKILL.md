@@ -1,6 +1,6 @@
 ---
 name: architecture-principles
-description: Architectural principles for state management (UDF, SSOT, Immutability), extensibility and modularity (OCP, Composition over Inheritance, Modularization, no leaky abstractions), and testability (DI, KISS). Use when making architectural decisions, choosing between technologies or design patterns, defining module or component boundaries, or performing cross-module refactoring.
+description: MANDATORY FOR DESIGN. This skill MUST be read and applied BEFORE making architectural decisions, choosing libraries/patterns, defining component boundaries, or doing cross-module refactoring.
 user-invocable: false
 ---
 

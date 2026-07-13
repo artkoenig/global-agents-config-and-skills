@@ -10,10 +10,16 @@
 - Additionally, if your analysis reveals that an already implemented solution in the code can be improved or optimized, proactively suggest these improvements.
 
 
-## Engineering Principles
+## Engineering Principles & Skill Triggers
 
-Detailed engineering principles live in dedicated skills and are applied automatically when relevant:
+1. **Before any analysis, file reading, or exploration (Git Check)**
+   - **Trigger**: Immediately at the very start of any task in a git-tracked repository, BEFORE running any search/grep commands, listing directories, or viewing/reading any files.
+   - **Action**: You MUST read and follow the `git-principles` skill first.
 
-- **Architectural decisions & cross-module refactoring** -> `architecture-principles` skill.
-- **Writing, generating, or refactoring code** -> `code-generation-principles` skill.
-- **Working on versioned (git-tracked) files** -> `git-principles` skill.
+2. **When planning system design, architecture, or module boundaries**
+   - **Trigger**: BEFORE making architectural decisions, choosing frameworks/libraries, defining module or component boundaries, or planning/executing cross-module refactoring.
+   - **Action**: You MUST read and follow the `architecture-principles` skill.
+
+3. **When writing, modifying, or refactoring code**
+   - **Trigger**: BEFORE you start writing, editing, generating, or refactoring any code files or unit tests.
+   - **Action**: You MUST read and follow the `code-generation-principles` skill.
