@@ -3,7 +3,7 @@
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user experiences it. This makes sure you find the real problem so your fix will actually solve it.
 - When starting a new project, use the `grill-me-for-spec` skill to turn the idea into a written specification (PRD) before building.
 - Once that PRD exists, decompose it into one main-issue plus child-issues via the `issue-tracker` skill. Issue tracking is **mandatory** for every non-trivial change — do not ask whether to track it, just do it. The only escape hatch is a trivial change, defined deterministically under "Git & Version Control".
-- **Ask before code changes.** Never start editing code on your own initiative. When I request work that touches code, confirm scope with me first — for non-trivial work that means filing the issue and confirming its breakdown before implementing; for a trivial change, confirm the one-off intent. (This rule is safeguarded by a behavioral eval; see the `workflow-evals` skill.)
+- **Ask before code changes.** Never start editing code on your own initiative. When I request work that touches code, confirm scope with me first — for non-trivial work that means filing the issue and confirming its breakdown before implementing; for a trivial change, confirm the one-off intent. (This rule is safeguarded by a behavioral eval; see the `self-test` skill.)
 - Critically challenge all requested changes. Before implementing or accepting any modification, verify it against the existing documentation files to ensure consistency and prevent contradictions. Keep documentation always up-to-date.
 - When I ask you to investigate a matter, do not make any changes to existing files. Clarify the matter and provide an explanation with a recommendation.
 - If you are uncertain during implementation and need to consult the web, place absolute priority on official documentation without exception. Conduct an intensive deep search directly on official developer sites or API references, to find the solution before considering secondary sources (such as forums or blogs).
@@ -161,7 +161,7 @@ Do not delegate trivial or single-file work either. A subagent that costs more t
 brief than to do is a loss, not a saving.
 
 This delegation policy is safeguarded by a behavioral eval (see the
-`workflow-evals` skill), which checks that the documented delegation choices
+`self-test` skill), which checks that the documented delegation choices
 actually happen.
 
 ## Engineering Principles Trigger
@@ -169,6 +169,21 @@ actually happen.
 **Trigger**: BEFORE making architectural decisions, choosing frameworks/libraries, defining module or component boundaries, planning/executing cross-module refactoring, OR writing, editing, generating, or refactoring any code files or unit tests.
 **Action**: You MUST read and follow the `engineering-principles` skill.
 
-This trigger is safeguarded by a behavioral eval (see the `workflow-evals`
+This trigger is safeguarded by a behavioral eval (see the `self-test`
 skill), which checks that a code-touching request actually causes the
 `engineering-principles` skill to be read before the code is written.
+
+## Running the Agent self-tests manually
+
+The self-testing apparatus (see the `self-test` skill) verifies the integrity of this repository.
+
+1. **Deterministic checks** — instant, no LLM. The quick default:
+
+   ```bash
+   python3 -m unittest discover -s scripts -p 'test_*.py'
+   ```
+   These deterministic checks also run automatically via the `pre-push` hook. A failure blocks the push; `git push --no-verify` is the sanctioned override.
+
+2. **Behavioral evals** — full agentic workflow; slower.
+   Behavioral evals verify whether skills, subagents, and AGENTS.md rules actually behave as documented. Since they require headless Agent executions, they are run entirely via the `self-test` skill rather than as a git hook.
+   To run them, simply ask the agent: "run the self-test skill" or "run behavioral evals".
