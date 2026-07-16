@@ -1,15 +1,22 @@
 ---
 name: issue-tracker
-description: Local, file-based issue tracker for a project. Everything is an issue — a directory under docs/issues/ with an issue.md — and issues nest to form features (an issue with child issues is a feature; its issue.md is the spec). Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved), to find and implement the next issue ready for work (claim → implement → resolve, one at a time), to break a specification down into child issues, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", "implement the next issue", working through tickets, breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
+description: Local, file-based issue tracker for a project, organised in two levels. A top-level main-issue — a directory under docs/issues/ with an issue.md holding the spec — maps 1:1 to one branch issue/<slug>, one worktree and one pull request; its nested child-issues are the vertical slices of that one PR. Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved), to find and implement the next child-issue ready for work (claim → implement → resolve), to break a specification down into child-issues, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", "implement the next issue", working through tickets, breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
 user-invocable: true
 ---
 
 # Issue Tracker
 
-A project's work is tracked as a **recursive tree of markdown issues**. There is
-only one concept — an *issue* — and issues nest arbitrarily deep, so a "feature"
-is simply an issue that has child issues, and its `issue.md` is that feature's
-specification. This keeps epics, features, and tasks in one uniform structure.
+A project's work is tracked as local markdown issues in **two levels**. A
+top-level **main-issue** — a directory `NN-<slug>/` with an `issue.md` — maps
+1:1 to one branch `issue/<slug>`, one worktree and one pull request, and its
+`issue.md` holds the specification (PRD). The directories nested inside it are
+its **child-issues**: the vertically-sliced, independently implementable units
+of that one PR. Every issue is the same thing on disk, so the engine treats them
+uniformly, but the shape the workflows assume is main-issue → child-issues.
+
+A main-issue carries a `Type:` (`feature|fix|refactor|chore`) — the change
+category that used to be a branch-name prefix, now that `issue/<slug>` is the
+only branch pattern. Child-issues inherit it.
 
 All file operations go through the deterministic script `scripts/tracker.py`, so
 you never hand-parse or hand-edit issue markdown. Editing by hand risks breaking
@@ -30,19 +37,20 @@ By default the tracker lives at `docs/issues/`. Set the env var
 
 ```
 docs/issues/
-  01-checkout-redesign/      # a feature = an issue with children
-    issue.md                 # the feature's specification (PRD)
+  01-checkout-redesign/      # a main-issue → branch issue/checkout-redesign
+    issue.md                 # Type: feature; holds the specification (PRD)
     01-cart-schema/
-      issue.md               # a leaf task
+      issue.md               # a child-issue (vertical slice)
     02-cart-api/
-      issue.md               # Blocked by: [01]
+      issue.md               # a child-issue, Blocked by: [01]
   02-login-bug/
-    issue.md                 # a reported bug, Status: needs-triage, no children
+    issue.md                 # a second main-issue, Type: fix, needs-triage
 ```
 
 An issue is addressed by its path relative to `docs/issues/`, e.g.
-`01-checkout-redesign/02-cart-api`. Parenthood is implicit in the folder nesting;
-`Blocked by:` references **sibling** issues by their numeric prefix.
+`01-checkout-redesign/02-cart-api`. The main-issue is implicit in the folder
+nesting; `Blocked by:` references **sibling** child-issues by their numeric
+prefix.
 
 See [reference/issue-format.md](reference/issue-format.md) for the `issue.md`
 structure and [reference/states.md](reference/states.md) for the state machine.
@@ -52,12 +60,12 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 | Command | Purpose |
 | --- | --- |
 | `init [--agents-file FILE]` | Create `docs/issues/`, write `docs/agents/issue-tracker.md`, ensure `.scratch/` is git-ignored, and wire an `## Agent skills → Issue tracker` note into `AGENTS.md`/`CLAUDE.md` (idempotent). |
-| `create --title T [--parent ID] [--status S] [--blocked-by "N,N"]` | Create an issue. Defaults to `needs-triage`. Prints the new issue id. |
+| `create --title T --type {feature,fix,refactor,chore} [--parent ID] [--status S] [--blocked-by "N,N"]` | Create an issue. `--type` is required for a main-issue and inherited by a child-issue (`--parent`). Defaults to `needs-triage`. Prints the new issue id. |
 | `list [--parent ID] [--status S] [--tree]` | List issues, optionally scoped to a subtree or filtered by status. |
 | `show ID` | Print an issue's markdown. |
 | `set-status ID STATE` | Move an issue to a new state. Invalid transitions and resolving a parent with open children are rejected. |
 | `comment ID "text"` | Append a note under `## Comments`. |
-| `next [--parent ID] [--all]` | Print the next actionable **leaf** issue: `ready-for-agent`, all sibling blockers `resolved`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
+| `next [--parent ID] [--all]` | Print the next actionable **child-issue** (a leaf): `ready-for-agent`, all sibling blockers `resolved`. Scope to one main-issue with `--parent`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
 | `selftest` | Run the engine's built-in tests. |
 
 ## When to use which workflow
@@ -65,9 +73,8 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 Most operations are single commands. Two operations are reasoning-heavy and have
 their own guides — read them when you reach that step:
 
-- **Breaking a specification into issues** — when a specification/PRD exists (for
-  a project or for a parent issue) and must be turned into implementable,
-  vertically-sliced child issues, follow
+- **Breaking a specification into issues** — when a main-issue's specification
+  (PRD) must be turned into implementable, vertically-sliced child-issues, follow
   [workflows/decompose.md](workflows/decompose.md).
 - **Implementing tracked issues** — to work through the open issues, follow
   [workflows/implement.md](workflows/implement.md). It covers both parallel
@@ -85,9 +92,9 @@ their own guides — read them when you reach that step:
 python3 <skill>/scripts/tracker.py init
 ```
 
-**File a freshly reported bug** (enters the triage inbox)
+**File a freshly reported bug** (a main-issue entering the triage inbox)
 ```bash
-python3 <skill>/scripts/tracker.py create --title "Login crashes on empty password"
+python3 <skill>/scripts/tracker.py create --title "Login crashes on empty password" --type fix
 ```
 
 **Pick up and complete the next task**
@@ -105,8 +112,9 @@ python3 <skill>/scripts/tracker.py next --all
 
 ## Relationship to other skills
 
-- **grill-me-for-spec** produces a specification (PRD). That PRD becomes a parent
-  issue's `issue.md`, which the decompose workflow slices into child issues.
+- **grill-me-for-spec** produces a specification (PRD) and then creates the
+  **main-issue** to hold it (with its `Type:`). The decompose workflow slices
+  that main-issue's spec into child-issues.
 - Implementation of tracked issues is handled by this skill's
   [implement workflow](workflows/implement.md); `init` also writes that workflow
   into the project's `docs/agents/issue-tracker.md`, so an agent working an

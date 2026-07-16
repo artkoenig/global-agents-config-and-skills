@@ -1,67 +1,69 @@
 # Workflow: Implement tracked issues
 
-Use this workflow to work through the open issues of a project. Each issue's
-lifecycle runs `ready-for-agent → claimed → resolved`; the tracker enforces the
-transitions, so all state changes go through `tracker.py`.
+Use this workflow to implement a **main-issue** — to work through all the
+child-issues that make up its one branch `issue/<slug>`, one worktree and one
+pull request. Each child-issue's lifecycle runs
+`ready-for-agent → claimed → resolved`; the tracker enforces the transitions, so
+all state changes go through `tracker.py`. The pull request is opened only once
+every child-issue — and then the main-issue itself — is `resolved`.
 
 Resolve `<skill>` below to the path of the `issue-tracker` skill's script.
 
 There are two ways to run this. **Prefer parallel dispatch** — it keeps the
 implementation out of the main conversation's context entirely. Fall back to the
 sequential loop when the `issue-implementer` subagent is unavailable, or when a
-single issue is all that is left.
+single child-issue is all that is left.
 
 ---
 
 ## A. Parallel dispatch (preferred)
 
-Spawn one `issue-implementer` subagent per issue, each in its own git worktree,
-then merge their branches. You stay the dispatcher: you never read the code, and
-your context holds only the issues' summaries.
+Spawn one `issue-implementer` subagent per child-issue, each in its own git
+worktree, then merge their branches into the main-issue branch. You stay the
+dispatcher: you never read the code, and your context holds only the issues'
+summaries.
 
 ### 1. Read the actionable frontier
 
 ```bash
-python3 <skill>/scripts/tracker.py next --all
+python3 <skill>/scripts/tracker.py next --parent <main-id> --all
 ```
 
-`next --all` prints every unblocked `ready-for-agent` **leaf** issue, one per
-line. Because a blocked issue is excluded by definition, everything printed is
+`next --all` prints every unblocked `ready-for-agent` child-issue, one per line.
+Because a blocked issue is excluded by definition, everything printed is
 independent of everything else printed — this list *is* the parallel-safe set.
-Add `--parent <id>` to focus on one feature.
 
 If nothing is printed, there is no ready work. Stop and report.
 
-### 2. Do not claim the child issues yourself
+### 2. Do not claim the child-issues yourself
 
-Leave their statuses alone. Each implementer claims its own issue inside its own
-worktree, and that claim comes back to you with its merge. A claim you make here
-would sit uncommitted in your checkout, never reach the worktrees (they branch
-from the integration branch, not your `HEAD`), and then conflict on merge. The
-parent feature is different — you claim that yourself, in step 3.
+Leave their statuses alone. Each implementer claims its own child-issue inside
+its own worktree, and that claim comes back to you with its merge. A claim you
+make here would sit uncommitted in your checkout, never reach the worktrees (they
+branch from the main-issue branch, not your `HEAD`), and then conflict on merge.
+The main-issue is different — you claim that yourself, in step 3.
 
 ### 3. Dispatch
 
-Before spawning, claim each dispatched issue's **parent feature** (if it has
-one), the same moment you would claim the issue itself if it had no subagent to
-do that for it. A feature is `claimed` for as long as any of its children are
-being worked — not just for an instant right before the whole subtree resolves:
+Before spawning, claim the **main-issue** (once) — it stays `claimed` for as long
+as any of its child-issues are being worked, not just for an instant right before
+the whole subtree resolves:
 ```bash
-for ID in <ids you are about to dispatch>; do
-  PARENT=$(dirname "$ID")
-  [ "$PARENT" != "." ] && python3 <skill>/scripts/tracker.py set-status "$PARENT" claimed
-done
+python3 <skill>/scripts/tracker.py set-status "<main-id>" claimed
 ```
-Setting an already-`claimed` parent to `claimed` again is a no-op, so this is
+Setting an already-`claimed` main-issue to `claimed` again is a no-op, so this is
 safe to repeat across dispatch rounds.
 
 Agree with the user how many to run at once, then spawn that many
 `issue-implementer` subagents **in a single message** so they run concurrently.
-Give each one exactly one issue:
+Give each one exactly one child-issue:
 
 - **issue_id** — one id from step 1. Never the same id to two agents.
 - **tracker_script** — the resolved path to `scripts/tracker.py`.
-- **branch_name** (optional) — defaults to `issue/<slug>`.
+- **branch_name** (optional) — the child's own throwaway worktree branch, which
+  merges into the main-issue branch and is removed afterwards. It is never pushed
+  and never its own PR; the main-issue's `issue/<slug>` is the only branch that
+  becomes a PR.
 
 Do not restate the implementation rules; the subagent's definition carries them.
 
@@ -70,53 +72,62 @@ frontier issues obviously touch the same code and no `Blocked by:` says so, the
 graph is wrong. Fix the blockers, or run those two sequentially, and tell the
 user why.
 
-### 4. Merge
+### 4. Merge in dependency order
 
 Each implementer returns a branch, a commit, and a note about what it touched.
-Merge them into the integration branch one at a time, running the test suite
-after each merge — a set of individually green branches is not a green merge.
+Merge them into the main-issue branch **sequentially, in dependency order** —
+which here is simply **numeric prefix order**: a child-issue can only be blocked
+by a sibling that already existed when it was created, so every blocker carries a
+lower prefix, and ascending numeric order therefore never merges a child before
+one it depends on.
 
-Merging happens in the **user's** checkout, so AGENTS.md's git rules apply in full:
-the worktree commit exception does not reach here. Ask before committing a merge,
-and never push on your own.
+After each single merge:
+- run the test suite — a set of individually green branches is not a green merge;
+- remove that child's worktree (`git worktree remove <path>`) and delete its
+  throwaway branch. No child branch outlives its merge.
+
+Merging happens in the **user's** checkout, so AGENTS.md's git rules apply in
+full: the worktree commit exception does not reach here. Ask before committing a
+merge, and never push on your own.
 
 On a conflict, resolve it or hand it to the user. Do not send it back to an
-implementer: its worktree is branched from the integration branch and knows
+implementer: its worktree is branched from the main-issue branch and knows
 nothing of its siblings.
 
-### 5. Resolve completed features
+### 5. Resolve the main-issue and open the PR
 
-`next`/`next --all` only ever return leaf issues, so nothing surfaces a finished
-**feature** automatically — check it yourself. For each parent touched by this
-batch:
+`next`/`next --all` only ever return child-issues, so nothing surfaces the
+finished **main-issue** automatically — check it yourself:
 
 ```bash
-python3 <skill>/scripts/tracker.py list --parent "<parent-id>"
+python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
 
-If every child now shows `resolved`, follow [resolve.md](resolve.md) on the
-**parent id** — it was already claimed in step 3, so this runs `testing`,
-resolves it, and reports. If children remain open (elsewhere in the frontier, or
-blocked), leave the parent alone; it isn't done yet.
+If every child-issue now shows `resolved`, follow [resolve.md](resolve.md) on the
+**main-issue id** — it was already claimed in step 3, so this runs `testing`,
+resolves it, and reports. Only once the main-issue is `resolved` is the pull
+request opened — one PR for the whole main-issue. If child-issues remain open
+(elsewhere in the frontier, or blocked), leave the main-issue alone; it isn't
+done yet.
 
 ### 6. Report
 
-Summarize per issue: id, final status, branch, and whether it merged cleanly.
-Include the outcome of any feature resolved in step 5.
+Summarize per child-issue: id, final status, branch, and whether it merged
+cleanly. Include whether the main-issue resolved and the PR is ready.
 
 ---
 
 ## B. Sequential loop (fallback)
 
-Work the issues one at a time, in the user's checkout.
+Work the child-issues one at a time, in the main-issue's own checkout (its
+worktree), on the main-issue branch.
 
-### 1. Find the next actionable issue
+### 1. Find the next actionable child-issue
 ```bash
-ID=$(python3 <skill>/scripts/tracker.py next)
+ID=$(python3 <skill>/scripts/tracker.py next --parent <main-id>)
 ```
-`next` returns the next unblocked `ready-for-agent` **leaf** issue. Add
-`--parent <id>` to focus on a single feature. If nothing is returned, there is no
-ready work — stop and report.
+`next` returns the next unblocked `ready-for-agent` child-issue. If nothing is
+returned, there is no ready work — stop and report.
 
 Claim it and read it:
 ```bash
@@ -124,35 +135,33 @@ python3 <skill>/scripts/tracker.py set-status "$ID" claimed
 python3 <skill>/scripts/tracker.py show "$ID"
 ```
 
-If `$ID` has a parent (a feature), claim the parent too, unless it already is —
-a feature is `claimed` for as long as any of its children are being worked, not
-just for an instant right before the whole subtree resolves:
+Claim the **main-issue** too, unless it already is — it stays `claimed` for as
+long as any of its child-issues are being worked:
 ```bash
-PARENT=$(dirname "$ID")
-[ "$PARENT" != "." ] && python3 <skill>/scripts/tracker.py set-status "$PARENT" claimed
+python3 <skill>/scripts/tracker.py set-status "<main-id>" claimed
 ```
 
 ### 2. Implement
-Implement **only** what this issue specifies — do not anticipate other issues.
-Work in small increments on a branch (e.g. `issue/<slug>`). For the coding
-itself, follow the `engineering-principles` skill (meaningful names, single
-responsibility, comprehensive tests). Then run the project's test suite and
-verify all tests pass and the issue's acceptance criteria are met.
+Implement **only** what this child-issue specifies — do not anticipate other
+child-issues. Work in small increments on the main-issue branch `issue/<slug>`.
+For the coding itself, follow the `engineering-principles` skill (meaningful
+names, single responsibility, comprehensive tests). Then run the project's test
+suite and verify all tests pass and the acceptance criteria are met.
 
 ### 3. Resolve
 Follow [resolve.md](resolve.md): append a short solution summary as a comment and
 set the status to `resolved`.
 
-### 4. Continue or hand off
-Repeat from step 1. When no ready issues remain, check whether the parent feature
-you were working under is now fully resolved:
+### 4. Continue or finish
+Repeat from step 1, in numeric order. When no ready child-issues remain, check
+whether the main-issue is now fully resolved:
 ```bash
-python3 <skill>/scripts/tracker.py list --parent "<parent-id>"
+python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
-If every child shows `resolved`, follow [resolve.md](resolve.md) on the parent id
-— it was already claimed in step 1, so this runs `testing`, resolves it, and
-reports. Only then give the user a brief summary of the changes made and the
-state of the git repository.
+If every child-issue shows `resolved`, follow [resolve.md](resolve.md) on the
+main-issue id — it was already claimed in step 1, so this runs `testing`,
+resolves it, and reports. Only then is the PR opened, and you give the user a
+brief summary of the changes made and the state of the git repository.
 
 ---
 

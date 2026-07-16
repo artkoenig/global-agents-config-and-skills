@@ -1,6 +1,6 @@
 ---
 name: grill-me-for-spec
-description: Interactive requirements-analysis and domain-modeling session that turns a vague idea, feature request, or bug into a written specification (a PRD file). It relentlessly grills the user one question at a time, researches the codebase, refines the domain glossary (CONTEXT.md) and architectural decision records (ADRs) as it goes, and writes a completed PRD as its output. Use this whenever the user wants to specify a new feature or change, flesh out requirements, "think through" or "spec out" something before building, analyze a bug's real cause, or produce a PRD — for either a whole project or a single feature or change. Trigger it on phrases like "help me spec this", "grill me", "let's nail down the requirements", "write a PRD for", or when a request is too underspecified to implement safely. Do not use it to break a finished spec into tasks or to write code.
+description: Interactive requirements-analysis and domain-modeling session that turns a vague idea, feature request, or bug into a written specification (a PRD file). It relentlessly grills the user one question at a time, researches the codebase, refines the domain glossary (CONTEXT.md) and architectural decision records (ADRs) as it goes, writes a completed PRD, and opens the main-issue that carries it (with its Type). Use this whenever the user wants to specify a new feature or change, flesh out requirements, "think through" or "spec out" something before building, analyze a bug's real cause, or produce a PRD — for either a whole project or a single feature or change. Trigger it on phrases like "help me spec this", "grill me", "let's nail down the requirements", "write a PRD for", or when a request is too underspecified to implement safely. Do not use it to break a finished spec into tasks or to write code.
 user-invocable: true
 ---
 
@@ -8,9 +8,11 @@ user-invocable: true
 
 Turn a rough idea, feature request, or bug into a precise, written specification
 (a PRD). The goal is a **shared, unambiguous understanding** captured on disk —
-not an implementation plan and not code. The PRD is the sole output: a
-self-contained file that a downstream decomposition or planning step can later
-turn into implementable work.
+not an implementation plan and not code. The PRD is the output, and this skill's
+closing act is to open the **main-issue** that will carry it: one top-level issue
+= one branch `issue/<slug>` = one worktree = one pull request, with the PRD as
+its `## Description`. A downstream decomposition step then slices that main-issue
+into implementable child-issues.
 
 This skill deliberately "grills": it asks hard questions and challenges vague or
 overloaded language, because most implementation risk comes from
@@ -20,10 +22,13 @@ under-specification, not from typing speed.
 
 Establish the essentials before grilling:
 
-- Is this a **feature** or a **bug**? For a bug, capture current vs. expected
-  behavior.
+- What **type** of change is this — `feature`, `fix`, `refactor`, or `chore`?
+  This becomes the main-issue's `Type:` in step 6 (it replaces the old
+  branch-name prefix). For a `fix`, capture current vs. expected behavior.
 - What is the target of the spec — a whole **project** or a single **feature or
-  change**? This frames how broadly to grill and where the PRD lands (see step 6).
+  change**? This frames how broadly to grill; either way the result is one
+  main-issue holding the PRD (the PRD is always decomposed into a single
+  main-issue plus child-issues).
 - Get a one-paragraph description in the user's own words.
 
 ## 2. Context & codebase analysis
@@ -82,15 +87,38 @@ Synthesize everything from the discussion and codebase analysis into a completed
 PRD, following [reference/PRD-FORMAT.md](reference/PRD-FORMAT.md). Do **not** run
 another interview for this — use the understanding already gained in step 3.
 
-## 6. Write the output & stop
+## 6. Create the main-issue and store the spec
 
-Write the completed PRD to a single self-contained file:
+The PRD is not left standing as its own file — it becomes the `## Description` of
+a new **main-issue**, the single home for the spec. Do this without asking:
+tracking is mandatory for every non-trivial change.
 
-- **Default:** `PRD.md` in the project root.
-- **Custom location:** if the user or the invoking workflow named a target path,
-  write the PRD there instead. This is how a spec for a single feature within a
-  larger project is placed where its owner expects it.
+Use the `issue-tracker` skill's `tracker.py` (resolve its path as that skill
+documents). Ensure the tracker is initialized — `init` is idempotent — then
+create the main-issue with the `Type:` you framed in step 1:
 
-Then stop. Do not generate an implementation plan and do not write code. Tell the
-user the specification is complete, state where the PRD was written, and that it
-is ready to be broken down into tasks or handed to a planning step.
+```bash
+python3 <issue-tracker-skill>/scripts/tracker.py init
+python3 <issue-tracker-skill>/scripts/tracker.py create \
+  --title "<main-issue name>" --type <feature|fix|refactor|chore>
+```
+
+`create` prints the new main-issue id (e.g. `01-checkout-redesign`) and starts it
+at `needs-triage` — specified, but not yet sliced. Choose the title so its slug
+matches the work's branch `issue/<slug>` (decided upfront per the git rules),
+keeping the 1:1 main-issue ↔ branch mapping honest.
+
+Then write the PRD body into that main-issue's `## Description` with a plain file
+edit — replace the placeholder line, and leave `## Acceptance Criteria` and
+`## Comments` untouched (only the header and `## Comments` are tracker-managed;
+see the `issue-tracker` skill's `reference/issue-format.md`). Do not also leave a
+standalone `PRD.md` behind: the `## Description` is the one copy of the spec, so
+it cannot drift.
+
+## 7. Hand off & stop
+
+Tell the user the specification is complete and now lives in main-issue `<id>`
+(`Type: <type>`), ready to be broken down. Then stop. Do **not** decompose it
+into child-issues, generate an implementation plan, or write code: slicing the
+PRD is the `issue-tracker` skill's decompose workflow, and it needs the user's
+approval of the breakdown — a decision that stays in the main conversation.

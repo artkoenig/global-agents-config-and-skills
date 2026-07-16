@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Deterministic engine for the local, file-based issue tracker.
 
-Issues form a recursive tree under a root directory (default: ``docs/issues``).
-Each issue is a directory ``NN-<slug>/`` holding an ``issue.md`` that describes
-it; child issues live in subdirectories of their parent's directory. A
-"feature" is therefore just an issue that happens to have children, and its
-``issue.md`` is that feature's specification. This keeps the whole workspace to
-a single concept — an *issue* — at arbitrary depth (epic -> feature -> task).
+Work is organised in two levels under a root directory (default:
+``docs/issues``). A top-level directory ``NN-<slug>/`` is a **main-issue**: it
+maps 1:1 to one branch ``issue/<slug>``, one worktree and one pull request, and
+its ``issue.md`` holds the specification (PRD). The subdirectories nested inside
+it are its **child-issues** — the vertically-sliced, independently implementable
+units of that one PR. Every issue is the same thing on disk (a directory
+``NN-<slug>/`` with an ``issue.md``), so the engine treats them uniformly and a
+child-issue may itself be grouped a level deeper when a spec truly needs it; the
+standard shape, and the one the workflows assume, is main-issue -> child-issues.
+
+A main-issue additionally carries a ``Type:`` (feature|fix|refactor|chore) — the
+change category that used to live in the old branch-name prefix. A child-issue
+inherits its main-issue's type.
 
 The script is intentionally deterministic so that skills never have to parse
 markdown by hand. Run ``tracker.py selftest`` to exercise the engine.
@@ -34,7 +41,14 @@ TRANSITIONS = {
 }
 DEFAULT_STATUS = "needs-triage"
 
+# The change category a main-issue carries in its ``Type:`` field. It replaces
+# the old branch-name prefix (feature|fix|refactor|chore) now that the only
+# branch pattern is ``issue/<slug>``. Child-issues inherit their main-issue's
+# type unless they override it.
+TYPES = ["feature", "fix", "refactor", "chore"]
+
 ISSUE_TEMPLATE = """Status: {status}
+Type: {type}
 Blocked by: {blocked_by}
 
 ## Description
@@ -52,10 +66,12 @@ AGENTS_BLOCK = """## Agent skills
 
 ### Issue tracker
 This project tracks work as local markdown issues under `docs/issues/`, managed
-through the `issue-tracker` skill. Everything is an *issue*: a directory
-`NN-<slug>/` with an `issue.md`; features are issues with child issues nested
-inside them. Do not edit issue files by hand — use the `issue-tracker` skill so
-status transitions stay valid.
+through the `issue-tracker` skill. A top-level `NN-<slug>/` directory is a
+**main-issue** — one branch `issue/<slug>`, one worktree, one pull request — and
+its `issue.md` holds the spec; the directories nested inside it are its
+**child-issues**, the vertical slices of that one PR. Do not edit issue files by
+hand — use the `issue-tracker` skill so status transitions and blocker rules
+stay valid.
 
 See `docs/agents/issue-tracker.md` for the state model and the workflow for
 implementing tracked issues.
@@ -63,15 +79,20 @@ implementing tracked issues.
 
 TRACKER_DOC = """# Issue tracker: local markdown
 
-Work for this repository is tracked as a recursive tree of markdown issues.
+Work for this repository is tracked as local markdown issues in two levels.
 
 ## Layout
-- Root: `docs/issues/`
-- Each issue is a directory `NN-<slug>/` containing an `issue.md`.
-- Child issues are subdirectories of their parent. A "feature" is just an issue
-  with children; its `issue.md` holds the specification (PRD).
-- An issue is addressed by its path relative to `docs/issues/`,
-  e.g. `01-checkout/02-cart-api`.
+- Root: `docs/issues/`.
+- A top-level `NN-<slug>/` directory is a **main-issue**: it maps 1:1 to one
+  branch `issue/<slug>`, one worktree and one pull request, and its `issue.md`
+  holds the specification (PRD). It carries a `Type:`
+  (feature|fix|refactor|chore) — the change category that used to be a
+  branch-name prefix.
+- The directories nested inside a main-issue are its **child-issues** — the
+  vertically-sliced units that make up that one PR. A child-issue inherits its
+  main-issue's type.
+- Each issue is a directory `NN-<slug>/` with an `issue.md`, addressed by its
+  path relative to `docs/issues/`, e.g. `01-checkout/02-cart-api`.
 
 ## States (enforced transitions)
 - `needs-triage` — awaiting evaluation by the maintainer
@@ -87,36 +108,42 @@ Allowed transitions:
 - `claimed` -> `resolved`, `ready-for-agent`
 - `resolved` -> `ready-for-agent` (reopen)
 
-A parent issue cannot become `resolved` while any child is still open.
+A main-issue cannot become `resolved` while any child-issue is still open, so it
+is "done" — and its PR ready to open — only once its whole subtree is.
 
-## Implementing an issue
-Work issues one at a time. For each:
-1. Pick the next actionable issue with `tracker.py next` (add `--parent <id>` to
-   focus on one feature). It returns the next `ready-for-agent` leaf whose
-   blockers are all `resolved`. If nothing is returned, there is no ready work.
+## Implementing a main-issue
+Every child-issue is implemented on the main-issue's one branch `issue/<slug>`;
+the pull request is opened only once every child-issue is `resolved`.
+
+Work the child-issues one at a time. For each:
+1. Pick the next actionable child with `tracker.py next --parent <main-id>`. It
+   returns the next `ready-for-agent` child whose blockers are all `resolved`.
+   If nothing is returned, there is no ready work.
 2. Claim it: `tracker.py set-status <id> claimed`, and read it with
    `tracker.py show <id>`.
-3. Implement **only** what that issue specifies — do not anticipate other issues.
-   Work in small increments on a branch (e.g. `issue/<slug>`), following this
-   project's engineering principles (meaningful names, single responsibility,
-   comprehensive tests).
+3. Implement **only** what that child specifies — do not anticipate other
+   children. Follow this project's engineering principles (meaningful names,
+   single responsibility, comprehensive tests).
 4. Run the test suite; verify all tests pass and the acceptance criteria are met.
 5. Resolve it: append a short solution summary with
    `tracker.py comment <id> "..."`, then `tracker.py set-status <id> resolved`.
 
-Repeat until `next` reports no ready issues.
+Repeat until `next` reports no ready child. Then resolve the main-issue and open
+the PR.
 
-## Implementing several issues at once
-`tracker.py next --all` prints every actionable leaf issue instead of just the
-first. Blocked issues are excluded, so the printed set is independent by
-construction and safe to work in parallel.
+## Implementing several child-issues at once
+`tracker.py next --parent <main-id> --all` prints every actionable child-issue
+instead of just the first. Blocked issues are excluded, so the printed set is
+independent by construction and safe to implement in parallel — one agent per
+child, each in its own git worktree, none of them claiming through the
+dispatcher (a worktree branches from the main-issue branch and never sees the
+dispatcher's uncommitted claim).
 
-To use it, one dispatcher hands each issue to its own agent working in its own
-git worktree, and merges the resulting branches afterwards. The dispatcher must
-not claim the issues itself: a worktree branches from the integration branch, so
-it never sees the dispatcher's uncommitted claim. Each agent claims, implements,
-resolves and commits its own issue inside its own worktree, and never calls
-`next` — that would hand it work a sibling already owns.
+Merge the finished child branches back into the main-issue branch **sequentially
+in dependency order**. Numeric prefix order is a valid dependency order: a child
+can only be blocked by a sibling that already existed when it was created, so
+every blocker has a lower prefix. Remove each child worktree after its merge
+(`git worktree remove`); no child branch outlives its merge.
 
 ## Do not hand-edit
 Manage issues through the `issue-tracker` skill's `tracker.py` so that the state
@@ -197,6 +224,10 @@ def set_field(issue_id, field, value):
 
 def get_status(issue_id):
     return read_field(issue_id, "Status")
+
+
+def type_of(issue_id):
+    return read_field(issue_id, "Type")
 
 
 def child_ids(issue_id):
@@ -280,12 +311,24 @@ def cmd_create(args):
     if status not in STATES:
         fail(f"Unknown status '{status}'. Valid: {', '.join(STATES)}")
 
+    # A main-issue (no parent) must declare a type — it maps 1:1 to a branch and
+    # the type replaces the old branch-name prefix. A child-issue inherits its
+    # main-issue's type unless it overrides it, so every issue carries one.
+    issue_type = args.type
+    if issue_type and issue_type not in TYPES:
+        fail(f"Unknown type '{issue_type}'. Valid: {', '.join(TYPES)}")
+    if parent_id:
+        issue_type = issue_type or type_of(parent_id)
+    elif not issue_type:
+        fail(f"--type is required for a main-issue. Valid: {', '.join(TYPES)}")
+
     name = f"{next_prefix(parent_id)}-{slugify(args.title)}"
     new_id = f"{parent_id}/{name}" if parent_id else name
     os.makedirs(issue_dir(new_id), exist_ok=True)
     with open(issue_file(new_id), "w") as f:
         f.write(ISSUE_TEMPLATE.format(
             status=status,
+            type=issue_type,
             blocked_by=format_blocked(args.blocked_by),
             title=args.title,
         ))
@@ -307,7 +350,9 @@ def cmd_list(args):
         else:
             label = issue_id
         container = "" if is_leaf(issue_id) else "/"
-        print(f"{label}{container}  [{status}]")
+        issue_type = type_of(issue_id)
+        type_str = f"  ({issue_type})" if issue_type else ""
+        print(f"{label}{container}  [{status}]{type_str}")
     if not found:
         print("(no matching issues)")
 
@@ -359,7 +404,7 @@ def cmd_comment(args):
 
 
 def find_actionable(start, limit=None):
-    """Return the `ready-for-agent` leaf issues whose blockers are all resolved.
+    """Return the `ready-for-agent` child-issues (leaves) with blockers resolved.
 
     Every issue in the result is independent of every other one: an issue that a
     sibling still blocks is excluded by `is_unblocked`. The full result is
@@ -380,7 +425,7 @@ def cmd_next(args):
     start = normalize_id(args.parent) if args.parent else ""
     actionable = find_actionable(start, limit=None if args.all else 1)
     if not actionable:
-        fail("No unblocked ready-for-agent leaf issue found.")
+        fail("No unblocked ready-for-agent child-issue found.")
     for issue_id in actionable:
         print(issue_id)
 
@@ -459,32 +504,47 @@ def cmd_selftest(_args):
     with tempfile.TemporaryDirectory() as tmp:
         os.environ[ROOT_ENV_VAR] = os.path.join(tmp, "docs", "issues")
 
-        def create(title, parent=None, status=None, blocked_by=None):
+        def create(title, parent=None, status=None, blocked_by=None, type=None):
             import io
             from contextlib import redirect_stdout
             buf = io.StringIO()
             with redirect_stdout(buf):
                 cmd_create(SimpleNamespace(title=title, parent=parent,
-                                           status=status, blocked_by=blocked_by))
+                                           status=status, blocked_by=blocked_by,
+                                           type=type))
             return buf.getvalue().strip()
 
-        feature = create("Checkout redesign", status="ready-for-agent")
-        assert feature == "01-checkout-redesign", feature
-        a = create("Cart schema", parent=feature, status="ready-for-agent")
-        b = create("Cart API", parent=feature, status="ready-for-agent", blocked_by="1")
-        bug = create("Login bug")  # default needs-triage, top-level leaf
+        # A main-issue must declare a type (it maps 1:1 to a branch).
+        try:
+            create("Typeless main", status="ready-for-agent")
+            raise AssertionError("main-issue without --type was allowed")
+        except SystemExit:
+            pass
+
+        main = create("Checkout redesign", status="ready-for-agent",
+                      type="feature")
+        assert main == "01-checkout-redesign", main
+        assert type_of(main) == "feature", type_of(main)
+
+        a = create("Cart schema", parent=main, status="ready-for-agent")
+        b = create("Cart API", parent=main, status="ready-for-agent",
+                   blocked_by="1")
+        assert type_of(a) == "feature", "child inherits its main-issue's type"
+        override = create("Chore slice", parent=main, type="chore")  # needs-triage
+        assert type_of(override) == "chore", "child --type overrides inheritance"
+
+        bug = create("Login bug", type="fix")  # a second, top-level main-issue
         assert bug == "02-login-bug", bug
-        assert get_status(bug) == "needs-triage"
+        assert get_status(bug) == "needs-triage" and type_of(bug) == "fix"
 
-        # next: first ready-for-agent leaf, and 'b' is blocked by 'a'.
-        assert not is_leaf(feature) and is_leaf(a) and is_leaf(b)
+        # 'a' is the only ready, unblocked child of main: 'b' is blocked by 'a',
+        # 'override' is still needs-triage, and main itself is not a leaf. The
+        # actionable frontier therefore cannot hand out work whose premise
+        # another agent has yet to establish.
+        assert not is_leaf(main) and is_leaf(a) and is_leaf(b)
         assert is_unblocked(a) and not is_unblocked(b)
-
-        # The actionable frontier excludes the blocked 'b', the non-leaf parent,
-        # and the untriaged bug -- so parallel dispatch cannot hand out work
-        # whose premise another agent has yet to establish.
-        assert find_actionable("") == [a], find_actionable("")
-        assert find_actionable("", limit=1) == [a]
+        assert find_actionable(main) == [a], find_actionable(main)
+        assert find_actionable(main, limit=1) == [a]
 
         # Enforced transitions: needs-triage -> resolved is illegal.
         try:
@@ -493,23 +553,25 @@ def cmd_selftest(_args):
         except SystemExit:
             pass
 
-        # Parent cannot resolve while children are open.
+        # A main-issue cannot resolve while a child-issue is open.
         cmd_set_status(SimpleNamespace(issue=a, status="claimed"))
         cmd_set_status(SimpleNamespace(issue=a, status="resolved"))
         assert is_unblocked(b)  # blocker a now resolved
+        cmd_set_status(SimpleNamespace(issue=main, status="claimed"))
         try:
-            cmd_set_status(SimpleNamespace(issue=feature, status="claimed"))
-            # feature is ready-for-agent -> claimed is valid; but resolve must fail:
-            cmd_set_status(SimpleNamespace(issue=feature, status="resolved"))
-            raise AssertionError("resolved parent with open child")
+            cmd_set_status(SimpleNamespace(issue=main, status="resolved"))
+            raise AssertionError("resolved main-issue with open child")
         except SystemExit:
             pass
 
-        # Resolve child b, then parent can resolve.
+        # Resolve the remaining children, then the main-issue can resolve.
         cmd_set_status(SimpleNamespace(issue=b, status="claimed"))
         cmd_set_status(SimpleNamespace(issue=b, status="resolved"))
-        cmd_set_status(SimpleNamespace(issue=feature, status="resolved"))
-        assert get_status(feature) == "resolved"
+        cmd_set_status(SimpleNamespace(issue=override, status="ready-for-agent"))
+        cmd_set_status(SimpleNamespace(issue=override, status="claimed"))
+        cmd_set_status(SimpleNamespace(issue=override, status="resolved"))
+        cmd_set_status(SimpleNamespace(issue=main, status="resolved"))
+        assert get_status(main) == "resolved"
 
     del os.environ[ROOT_ENV_VAR]
     print("selftest: OK")
@@ -530,6 +592,9 @@ def build_parser():
     p_create = sub.add_parser("create", help="Create a new issue.")
     p_create.add_argument("--title", required=True)
     p_create.add_argument("--parent", help="Parent issue id to nest under.")
+    p_create.add_argument("--type", choices=TYPES,
+                          help="Change category. Required for a main-issue; a "
+                               "child-issue inherits its main-issue's type.")
     p_create.add_argument("--status", help=f"Initial status (default {DEFAULT_STATUS}).")
     p_create.add_argument("--blocked-by", help="Comma-separated sibling numbers.")
     p_create.set_defaults(func=cmd_create)
@@ -554,10 +619,10 @@ def build_parser():
     p_comment.add_argument("text")
     p_comment.set_defaults(func=cmd_comment)
 
-    p_next = sub.add_parser("next", help="Print the next actionable leaf issue.")
-    p_next.add_argument("--parent", help="Restrict to a subtree.")
+    p_next = sub.add_parser("next", help="Print the next actionable child-issue.")
+    p_next.add_argument("--parent", help="Restrict to one main-issue's subtree.")
     p_next.add_argument("--all", action="store_true",
-                        help="Print every actionable leaf issue, one per line, "
+                        help="Print every actionable child-issue, one per line, "
                              "instead of only the first. Blocked issues are "
                              "excluded, so the printed issues are independent of "
                              "one another and safe to implement in parallel.")

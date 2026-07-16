@@ -14,7 +14,7 @@ Use this skill to secure the current changes with a three-axis verification. Eac
 
 Each subagent carries its own model and tool restrictions, so the axes cost what they are worth: `opus` for the code-smell judgment of Axis A, `sonnet` for the diff-vs-spec comparison of Axis B, and `haiku` for running a command in Axis C. All three are read-only — they report, they never fix.
 
-The skill is agnostic - it works on any repository and does not depend on a specific feature/issue workspace or directory layout. It is also invoked automatically at one fixed point: before resolving a **feature** (an issue with children) in the `issue-tracker` workflow — see [resolve.md](../issue-tracker/workflows/resolve.md) step 2. Leaf issues don't trigger it individually.
+The skill is agnostic - it works on any repository and does not depend on a specific feature/issue workspace or directory layout. In the `issue-tracker` workflow it runs twice at different scopes: once per leaf issue, inside `issue-implementer`'s own worktree (see its Verify step) against that issue's acceptance criteria, and once more before resolving a **feature** (an issue with children) — see [resolve.md](../issue-tracker/workflows/resolve.md) step 2 — against the whole subtree's spec.
 
 ## Inputs (optional)
 
