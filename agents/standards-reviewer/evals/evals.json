@@ -1,0 +1,16 @@
+{
+  "agent_name": "standards-reviewer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Take a look at this repository's overall code health and let me know if there are structural problems or code smells worth addressing.",
+      "expected_output": "The review is delegated to the standards-reviewer subagent, which runs any configured static analysis as a gate, reviews the whole codebase for judgment-level code smells, and returns concrete findings (or an explicit clean bill) grounded in real modules. It edits nothing, and the main conversation gets a digest rather than raw output.",
+      "expectations": [
+        "The code-health review was delegated to the standards-reviewer subagent (an Agent/Task tool call targeting standards-reviewer), not performed inline in the main conversation.",
+        "standards-reviewer reviewed the actual codebase and returned concrete findings grounded in real files/modules (or an explicit clean bill), naming what it examined — not a vague, ungrounded 'looks fine'.",
+        "The review was read-only: the transcript shows standards-reviewer reporting findings without editing, reformatting, or 'fixing' any file.",
+        "The user-facing answer is a digest of the findings, so the raw tool output does not have to land in the main conversation."
+      ]
+    }
+  ]
+}

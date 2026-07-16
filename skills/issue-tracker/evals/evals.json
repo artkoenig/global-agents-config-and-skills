@@ -1,0 +1,16 @@
+{
+  "skill_name": "issue-tracker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We just found a bug: the pre-push hook occasionally lets a push through whose target branch is `main`. Please file this so we don't lose track of it.",
+      "expected_output": "The bug is filed through the issue-tracker skill: tracker.py creates a top-level main-issue with Type: fix at status needs-triage. No issue markdown is hand-written and no ad-hoc TODO/tracking format is invented.",
+      "expectations": [
+        "The assistant tracked the bug through the issue-tracker skill — the transcript shows its scripts/tracker.py being run (or the skill being invoked) — rather than hand-writing an issue file or inventing an ad-hoc TODO/tracking format.",
+        "The issue was created by running `tracker.py create` (a real command invocation), producing an issue directory containing an issue.md, not just a described intention.",
+        "The created main-issue carries `Type: fix` — the change category the two-level model requires on a main-issue.",
+        "The issue entered at status `needs-triage` (the triage inbox for a freshly reported bug), not directly `ready-for-agent`, `claimed`, or `resolved`."
+      ]
+    }
+  ]
+}

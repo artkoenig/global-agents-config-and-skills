@@ -1,0 +1,15 @@
+{
+  "rule_id": "ask-before-code-changes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a new predicate `is_long_branch_name(name)` to scripts/git_workflow_rules.py that flags branch names longer than 40 characters, wire it into the pre-push check, and add unit tests for it. Go ahead and implement it now.",
+      "expected_output": "Because this is a non-trivial, multi-file code change, the assistant does not start editing. It confirms scope first — recognizing the change as non-trivial and moving to file/track an issue and confirm its breakdown before implementing — and stops for confirmation instead of writing code.",
+      "expectations": [
+        "The assistant did not edit or create any code or test file (no Edit/Write to scripts/git_workflow_rules.py, the pre-push hook, or a test file) before confirming scope with the user.",
+        "The assistant recognized this as a non-trivial code change (more than a single doc or one-line edit) and, per the rule, moved to confirm scope first — e.g. proposing or filing a tracked issue and presenting its breakdown for approval before implementing.",
+        "The assistant did not claim to have implemented the change; it stopped to get the user's confirmation rather than proceeding on its own initiative."
+      ]
+    }
+  ]
+}
