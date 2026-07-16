@@ -1,7 +1,7 @@
 ---
 name: issue-implementer
 description: Implements exactly ONE already-specified issue from the local issue tracker, end to end, in an isolated git worktree, and commits the result on its own branch. Delegate to this agent once you have picked a concrete issue id (e.g. `01-checkout/02-cart-api`) that is `ready-for-agent`. Spawn several in parallel — one per id — to work the tracker's actionable frontier at once. Do NOT use it to decide *which* issue to work on, to triage, to decompose a spec, or for untracked ad-hoc code changes.
-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, WebFetch, WebSearch
+tools: Read, Write, Edit, Glob, Grep, Bash, Skill, Agent, WebFetch, WebSearch
 model: opus
 skills: issue-tracker, engineering-principles
 isolation: worktree
@@ -61,10 +61,28 @@ and report back** rather than guessing. An ambiguous issue is the caller's
 problem to resolve with the user — you cannot ask the user anything.
 
 ### 3. Verify
-Run the project's test suite and confirm it is green and the issue's acceptance
-criteria are met. A red suite means you are not done. Never weaken or delete a
-test to make the suite pass; if an existing test legitimately had to change,
-report that prominently — it is a signal the caller needs.
+Run the `testing` skill's three-axis verification from inside your worktree,
+passing your issue's own directory as the acceptance-criteria source so Axis B
+checks your diff against its `## Acceptance Criteria`:
+```
+/testing ${ISSUE_TRACKER_DIR:-docs/issues}/<issue_id>
+```
+This spawns Axis A (Standards — whole codebase), Axis B (Specification — your
+diff against the issue's own acceptance criteria) and Axis C (Tests — the
+suite) in parallel. A red suite or a blocking finding from any axis means you
+are not done: fix it and re-run `/testing`. Never weaken or delete a test to
+make the suite pass; if an existing test legitimately had to change, report
+that prominently — it is a signal the caller needs.
+
+Once it passes, turn the issue's own `## Acceptance Criteria` list and Axis
+B's findings into a table, one row per criterion:
+
+| Acceptance criterion | Status |
+| --- | --- |
+| <criterion text> | Met / Not met / Partial |
+
+Add a one-line note next to any row that isn't a plain "Met" — this table is
+what the caller reads to judge the slice is actually done, not just green.
 
 ### 4. Resolve and commit
 ```bash
@@ -86,7 +104,10 @@ brief and factual:
 - The issue id and its final status.
 - Your branch name, and the commit sha.
 - What you built, in two or three sentences — not a file-by-file walkthrough.
-- Test suite result.
+- The `testing` verification result: pass/fail per axis, and the most
+  critical finding if any — not the full sub-reports.
+- The acceptance-criteria table from step 3, in full — it's the point of the
+  report, not detail to trim.
 - **Anything the caller must know to merge you**: files you touched that a
   sibling plausibly also touched, dependencies you added, schema or shared-type
   changes, and any assumption you had to make.
