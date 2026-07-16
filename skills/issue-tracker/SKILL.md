@@ -57,7 +57,7 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 | `show ID` | Print an issue's markdown. |
 | `set-status ID STATE` | Move an issue to a new state. Invalid transitions and resolving a parent with open children are rejected. |
 | `comment ID "text"` | Append a note under `## Comments`. |
-| `next [--parent ID]` | Print the next actionable **leaf** issue: `ready-for-agent`, all sibling blockers `resolved`. |
+| `next [--parent ID] [--all]` | Print the next actionable **leaf** issue: `ready-for-agent`, all sibling blockers `resolved`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
 | `selftest` | Run the engine's built-in tests. |
 
 ## When to use which workflow
@@ -69,9 +69,11 @@ their own guides — read them when you reach that step:
   a project or for a parent issue) and must be turned into implementable,
   vertically-sliced child issues, follow
   [workflows/decompose.md](workflows/decompose.md).
-- **Implementing tracked issues** — to work through the open issues (claim →
-  implement → resolve, one at a time), follow
-  [workflows/implement.md](workflows/implement.md).
+- **Implementing tracked issues** — to work through the open issues, follow
+  [workflows/implement.md](workflows/implement.md). It covers both parallel
+  dispatch to `issue-implementer` subagents (preferred — the implementation stays
+  out of the main conversation) and the sequential claim → implement → resolve
+  loop as a fallback.
 - **Resolving an implemented issue** — when an issue has been implemented and its
   tests pass, follow [workflows/resolve.md](workflows/resolve.md) to record the
   outcome and set `resolved`.
@@ -94,6 +96,11 @@ ID=$(python3 <skill>/scripts/tracker.py next)
 python3 <skill>/scripts/tracker.py set-status "$ID" claimed
 # ...implement (see workflows/implement.md), then:
 python3 <skill>/scripts/tracker.py set-status "$ID" resolved
+```
+
+**See everything that could be worked in parallel right now**
+```bash
+python3 <skill>/scripts/tracker.py next --all
 ```
 
 ## Relationship to other skills

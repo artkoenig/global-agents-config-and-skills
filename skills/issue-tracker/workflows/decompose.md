@@ -15,8 +15,13 @@ Decide where the resulting issues belong:
   ```bash
   python3 <skill>/scripts/tracker.py create --title "<feature name>"
   ```
-  Put the specification into that issue's `## Description` (the PRD *is* the
-  parent's `issue.md`).
+  Then replace its `## Description` placeholder with the spec's content. This is
+  a plain file edit, not a tracker command — only the header and `## Comments`
+  are tracker-managed (see
+  [reference/issue-format.md](reference/issue-format.md)). If the spec came from
+  `grill-me-for-spec` as a standalone file (e.g. `PRD.md`), copy its content in
+  and then delete that file: the issue's `## Description` becomes the one copy
+  of the spec, not a second one that can drift from it.
 - If a parent issue already exists, use its id.
 
 ## 2. Slice vertically (tracer bullets)

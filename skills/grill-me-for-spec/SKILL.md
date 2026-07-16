@@ -36,6 +36,16 @@ out yourself:
 - Identify affected classes, interfaces, APIs, data models, and UI components.
 - Research facts directly from the codebase instead of asking about them.
 
+**Delegate this research to the `spec-researcher` subagent.** It reads the code,
+the glossary and the ADRs in its own context and returns a briefing: current
+behavior, existing commitments, blast radius, collisions, and the open questions
+only the user can answer. That keeps dozens of files out of this conversation, so
+the context you have left is spent on the grilling itself — which is the part
+that actually needs you.
+
+The grilling in step 3 stays here and must not be delegated: a subagent cannot
+ask the user anything, so it would invent the answers instead of getting them.
+
 ## 3. Grilling session & active domain modeling
 
 This is the core. Relentlessly question the user on requirements and design until

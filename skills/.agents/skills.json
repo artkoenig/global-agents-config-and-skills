@@ -4,8 +4,7 @@
     { "path": "../issue-tracker" },
     { "path": "../testing" },
     { "path": "../skill-creator" },
-    { "path": "../architecture-principles" },
-    { "path": "../code-generation-principles" },
-    { "path": "../git-principles" }
+    { "path": "../engineering-principles" },
+    { "path": "../cloud-session-bootstrap" }
   ]
 }

@@ -106,6 +106,18 @@ Work issues one at a time. For each:
 
 Repeat until `next` reports no ready issues.
 
+## Implementing several issues at once
+`tracker.py next --all` prints every actionable leaf issue instead of just the
+first. Blocked issues are excluded, so the printed set is independent by
+construction and safe to work in parallel.
+
+To use it, one dispatcher hands each issue to its own agent working in its own
+git worktree, and merges the resulting branches afterwards. The dispatcher must
+not claim the issues itself: a worktree branches from the integration branch, so
+it never sees the dispatcher's uncommitted claim. Each agent claims, implements,
+resolves and commits its own issue inside its own worktree, and never calls
+`next` — that would hand it work a sibling already owns.
+
 ## Do not hand-edit
 Manage issues through the `issue-tracker` skill's `tracker.py` so that the state
 machine and blocker rules are respected.
@@ -346,14 +358,31 @@ def cmd_comment(args):
     print(f"Comment added to {issue_id}")
 
 
-def cmd_next(args):
-    start = normalize_id(args.parent) if args.parent else ""
+def find_actionable(start, limit=None):
+    """Return the `ready-for-agent` leaf issues whose blockers are all resolved.
+
+    Every issue in the result is independent of every other one: an issue that a
+    sibling still blocks is excluded by `is_unblocked`. The full result is
+    therefore the parallel-safe frontier — the set that may be worked on at the
+    same time without one agent invalidating another's premise.
+    """
+    actionable = []
     for issue_id in walk(start):
         if is_leaf(issue_id) and get_status(issue_id) == "ready-for-agent" \
                 and is_unblocked(issue_id):
-            print(issue_id)
-            return
-    fail("No unblocked ready-for-agent leaf issue found.")
+            actionable.append(issue_id)
+            if limit is not None and len(actionable) >= limit:
+                break
+    return actionable
+
+
+def cmd_next(args):
+    start = normalize_id(args.parent) if args.parent else ""
+    actionable = find_actionable(start, limit=None if args.all else 1)
+    if not actionable:
+        fail("No unblocked ready-for-agent leaf issue found.")
+    for issue_id in actionable:
+        print(issue_id)
 
 
 # --------------------------------------------------------------------------- #
@@ -451,6 +480,12 @@ def cmd_selftest(_args):
         assert not is_leaf(feature) and is_leaf(a) and is_leaf(b)
         assert is_unblocked(a) and not is_unblocked(b)
 
+        # The actionable frontier excludes the blocked 'b', the non-leaf parent,
+        # and the untriaged bug -- so parallel dispatch cannot hand out work
+        # whose premise another agent has yet to establish.
+        assert find_actionable("") == [a], find_actionable("")
+        assert find_actionable("", limit=1) == [a]
+
         # Enforced transitions: needs-triage -> resolved is illegal.
         try:
             cmd_set_status(SimpleNamespace(issue=bug, status="resolved"))
@@ -521,6 +556,11 @@ def build_parser():
 
     p_next = sub.add_parser("next", help="Print the next actionable leaf issue.")
     p_next.add_argument("--parent", help="Restrict to a subtree.")
+    p_next.add_argument("--all", action="store_true",
+                        help="Print every actionable leaf issue, one per line, "
+                             "instead of only the first. Blocked issues are "
+                             "excluded, so the printed issues are independent of "
+                             "one another and safe to implement in parallel.")
     p_next.set_defaults(func=cmd_next)
 
     sub.add_parser("selftest", help="Run the built-in engine tests.").set_defaults(func=cmd_selftest)

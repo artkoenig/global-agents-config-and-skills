@@ -12,13 +12,42 @@ verified — `resolved` means "implemented and passing".
    python3 <skill>/scripts/tracker.py comment "<issue-id>" "Implemented X; see <area>. Tests green."
    ```
 
-2. **Set the state to resolved:**
+2. **If this issue is a feature, verify it first.** Check whether it has
+   children:
+   ```bash
+   python3 <skill>/scripts/tracker.py list --parent "<issue-id>"
+   ```
+   Any results mean this is a feature, not a leaf — its whole subtree is now
+   implemented, and that is exactly the point to run the `testing` skill
+   (three-axis verification), once per feature, not per leaf issue. It should
+   already be `claimed` (see [implement.md](implement.md) — a feature is claimed
+   the moment work starts on any of its children, same as a leaf). Pass the
+   feature's own issue directory as the acceptance-criteria source so Axis B
+   reviews the diff against its spec:
+   ```
+   /testing <issue-tracker-dir>/<issue-id>
+   ```
+   If it surfaces blocking findings, fix them (or hand them to the user) and
+   re-run `testing` — do not resolve a feature that hasn't passed verification.
+   Leaf issues skip this step: their own test run at implementation time (see
+   `issue-implementer`) already covers that single vertical slice.
+
+3. **Set the state to resolved:**
    ```bash
    python3 <skill>/scripts/tracker.py set-status "<issue-id>" resolved
    ```
    The tracker rejects this if the issue is a parent with open children — resolve
    the children first. A feature therefore becomes `resolved` only when its whole
-   subtree is done.
+   subtree is done **and**, per step 2, has passed verification.
 
-3. **Continue.** If more issues remain, pick up the next one with
+4. **Commit the changes.** Commit the code together with this issue's status
+   change, so the tracker state and the work it describes stay in one commit.
+
+   *Who commits depends on where you are*, per AGENTS.md's git rules:
+   - Working **in your own worktree** (the `issue-implementer` subagent): commit
+     without asking. Your worktree cannot be handed back otherwise. Never push.
+   - Working **in the user's checkout**: do not commit on your own. Report that
+     the issue is resolved and let the user decide when to commit.
+
+5. **Continue.** If more issues remain, pick up the next one with
    `tracker.py next` (see the [implement workflow](implement.md)).
