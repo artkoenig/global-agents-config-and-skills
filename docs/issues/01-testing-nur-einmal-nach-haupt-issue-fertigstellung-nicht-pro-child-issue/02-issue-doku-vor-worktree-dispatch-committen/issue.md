@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -35,3 +35,4 @@ Decompose zu Implement sichtbar ist.
 - [ ] Bestehende Tests/Selftest der issue-tracker-Engine bleiben grün.
 
 ## Comments
+- implement.md Section A: neuer Schritt 3 verlangt das Committen des main-issue-Branch-Standes (inkl. docs/issues/) vor dem Worktree-Spawn, ohne selbst zu committen (AGENTS.md-Regel). Folgeschritte umnummeriert (Dispatch=4, Merge=5, ...), Querverweise angepasst. decompose.md Handoff verweist auf diese Voraussetzung.

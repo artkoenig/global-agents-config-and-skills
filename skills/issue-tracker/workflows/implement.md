@@ -41,9 +41,28 @@ Leave their statuses alone. Each implementer claims its own child-issue inside
 its own worktree, and that claim comes back to you with its merge. A claim you
 make here would sit uncommitted in your checkout, never reach the worktrees (they
 branch from the main-issue branch, not your `HEAD`), and then conflict on merge.
-The main-issue is different — you claim that yourself, in step 3.
+The main-issue is different — you claim that yourself, in step 4.
 
-### 3. Dispatch
+### 3. Commit the issue documentation before spawning worktrees
+
+Each `issue-implementer` runs in a worktree that branches from the main-issue
+branch and therefore sees only **committed** history — never the uncommitted
+state of your checkout. The child-issues just created by
+[decompose.md](decompose.md) under `docs/issues/` are typically still
+uncommitted at this point. If you spawn now, no implementer can read its own
+`issue.md`: the file exists only in your checkout, not in its worktree.
+
+So the current state of the main-issue branch — including the new issue
+documentation under `docs/issues/` — **must be committed before any worktree is
+spawned**. Without that commit, the worktrees do not work.
+
+This commit happens in the **user's** checkout, so AGENTS.md's "never commit
+automatically" rule applies in full: do not commit on your own initiative. Ask
+the user to commit the issue documentation (or for confirmation to do so), and
+make explicit that dispatch cannot proceed until it is committed. Only once the
+`docs/issues/` state is committed do you continue to dispatch.
+
+### 4. Dispatch
 
 Before spawning, claim the **main-issue** (once) — it stays `claimed` for as long
 as any of its child-issues are being worked, not just for an instant right before
@@ -72,7 +91,7 @@ frontier issues obviously touch the same code and no `Blocked by:` says so, the
 graph is wrong. Fix the blockers, or run those two sequentially, and tell the
 user why.
 
-### 4. Merge in dependency order
+### 5. Merge in dependency order
 
 Each implementer returns a branch, a commit, and a note about what it touched.
 Merge them into the main-issue branch **sequentially, in dependency order** —
@@ -94,7 +113,7 @@ On a conflict, resolve it or hand it to the user. Do not send it back to an
 implementer: its worktree is branched from the main-issue branch and knows
 nothing of its siblings.
 
-### 5. Resolve the main-issue and open the PR
+### 6. Resolve the main-issue and open the PR
 
 `next`/`next --all` only ever return child-issues, so nothing surfaces the
 finished **main-issue** automatically — check it yourself:
@@ -104,13 +123,13 @@ python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
 
 If every child-issue now shows `resolved`, follow [resolve.md](resolve.md) on the
-**main-issue id** — it was already claimed in step 3, so this runs `testing`,
+**main-issue id** — it was already claimed in step 4, so this runs `testing`,
 resolves it, and reports. Only once the main-issue is `resolved` is the pull
 request opened — one PR for the whole main-issue. If child-issues remain open
 (elsewhere in the frontier, or blocked), leave the main-issue alone; it isn't
 done yet.
 
-### 6. Report
+### 7. Report
 
 Summarize per child-issue: id, final status, branch, and whether it merged
 cleanly. Include whether the main-issue resolved and the PR is ready.
