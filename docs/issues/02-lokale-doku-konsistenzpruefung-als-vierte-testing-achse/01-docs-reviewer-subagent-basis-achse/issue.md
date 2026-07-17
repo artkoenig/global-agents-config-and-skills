@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: feature
 Blocked by: None
 
@@ -39,3 +39,4 @@ folgt in einem eigenen Issue).
 - [ ] Bericht ist auf Deutsch, ändert keine Dateien (rein lesend).
 
 ## Comments
+- Added agents/docs-reviewer/agent.md: read-only sonnet subagent modeled on spec-reviewer. Reviews the diff since merge-base against CLAUDE.md, root README*, and docs/** recursively; reports drift under ## Docs in German (datei:zeile + Begruendung), reports 'nichts im Scope gefunden' on empty scope. Standalone, not yet wired into the testing skill.
