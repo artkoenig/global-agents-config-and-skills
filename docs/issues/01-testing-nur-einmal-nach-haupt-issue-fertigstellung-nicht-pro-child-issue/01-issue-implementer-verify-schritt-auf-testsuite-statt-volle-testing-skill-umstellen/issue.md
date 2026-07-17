@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -36,3 +36,4 @@ vollen testing-Skill, nur mit der reinen Testsuite).
 - [ ] Bestehende Tests/Selftest der issue-tracker-Engine bleiben grün.
 
 ## Comments
+- issue-implementer Verify-Schritt laeuft jetzt nur die Testsuite (delegiert an test-runner) statt der vollen /testing-Skill; Report-Abschnitt und resolve.md Schritt 2 entsprechend angepasst. Die volle Drei-Achsen-testing-Skill bleibt exklusiv dem Main-Issue vorbehalten.

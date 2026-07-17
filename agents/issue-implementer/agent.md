@@ -61,28 +61,29 @@ and report back** rather than guessing. An ambiguous issue is the caller's
 problem to resolve with the user — you cannot ask the user anything.
 
 ### 3. Verify
-Run the `testing` skill's three-axis verification from inside your worktree,
-passing your issue's own directory as the acceptance-criteria source so Axis B
-checks your diff against its `## Acceptance Criteria`:
-```
-/testing ${ISSUE_TRACKER_DIR:-docs/issues}/<issue_id>
-```
-This spawns Axis A (Standards — whole codebase), Axis B (Specification — your
-diff against the issue's own acceptance criteria) and Axis C (Tests — the
-suite) in parallel. A red suite or a blocking finding from any axis means you
-are not done: fix it and re-run `/testing`. Never weaken or delete a test to
-make the suite pass; if an existing test legitimately had to change, report
-that prominently — it is a signal the caller needs.
+Run **only the test suite** for your slice — not the full three-axis `testing`
+skill. Delegate the run to the `test-runner` subagent from inside your worktree:
+it finds the project's test command, runs the suite, and reports green/red with
+the failing output. The full three-axis `testing` skill (Standards + Spec +
+Tests) is reserved for the **main-issue** and runs exactly once, after its whole
+subtree is done (see `resolve.md`); it never runs per child-issue.
 
-Once it passes, turn the issue's own `## Acceptance Criteria` list and Axis
-B's findings into a table, one row per criterion:
+A red suite means you are not done: fix it and re-run `test-runner`. Never
+weaken or delete a test to make the suite pass; if an existing test legitimately
+had to change, report that prominently — it is a signal the caller needs.
+
+Once the suite is green, judge your slice against the issue's own
+`## Acceptance Criteria` yourself and turn that list into a table, one row per
+criterion:
 
 | Acceptance criterion | Status |
 | --- | --- |
 | <criterion text> | Met / Not met / Partial |
 
 Add a one-line note next to any row that isn't a plain "Met" — this table is
-what the caller reads to judge the slice is actually done, not just green.
+what the caller reads to judge the slice is actually done, not just green. The
+automatic Spec review (Axis B) is not run here; it happens once at the
+main-issue level.
 
 ### 4. Resolve and commit
 ```bash
@@ -104,8 +105,9 @@ brief and factual:
 - The issue id and its final status.
 - Your branch name, and the commit sha.
 - What you built, in two or three sentences — not a file-by-file walkthrough.
-- The `testing` verification result: pass/fail per axis, and the most
-  critical finding if any — not the full sub-reports.
+- The test-suite result: green or red (and, if red, the failing output) — the
+  three-axis `testing` skill is not run per child-issue, so there is no
+  per-axis result to report here.
 - The acceptance-criteria table from step 3, in full — it's the point of the
   report, not detail to trim.
 - **Anything the caller must know to merge you**: files you touched that a
