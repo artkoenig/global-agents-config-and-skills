@@ -91,3 +91,9 @@ its whole subtree is `resolved` (enforced by the main-issue/child-issue rule).
 Do not write implementation code here. Tell the user the breakdown is complete and
 that implementation can proceed via the [implement workflow](implement.md), which
 picks up child-issues with `next`.
+
+Note the handoff prerequisite: the child-issues just created under `docs/issues/`
+are still uncommitted. Before implement.md's parallel dispatch can spawn
+`issue-implementer` worktrees, this issue documentation **must be committed** —
+a worktree branches from committed history and cannot otherwise read its own
+`issue.md` (see implement.md, Section A, step 3).
