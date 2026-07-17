@@ -97,3 +97,4 @@ Out of Scope.
 - [ ]
 
 ## Comments
+- Beide Child-Issues implementiert: docs-reviewer Subagent (agents/docs-reviewer/agent.md) + verpflichtende Einbindung als Axis D in skills/testing/SKILL.md. Deterministische Tests gruen (21/21).
