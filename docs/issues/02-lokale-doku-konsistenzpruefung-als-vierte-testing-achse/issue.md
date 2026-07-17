@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: feature
 Blocked by: None
 
@@ -98,3 +98,4 @@ Out of Scope.
 
 ## Comments
 - Beide Child-Issues implementiert: docs-reviewer Subagent (agents/docs-reviewer/agent.md) + verpflichtende Einbindung als Axis D in skills/testing/SKILL.md. Deterministische Tests gruen (21/21).
+- testing (4 Achsen) gruen nach drei Iterationen: Terminologie-Fix in docs-reviewer/agent.md, README.md-Update, und Revert eines unrelated AGENTS.md/tracker-bootstrap Scope-Creeps (Spec-Achse fand das). Finaler Diff: agents/docs-reviewer/agent.md (neu), skills/testing/SKILL.md, README.md.
