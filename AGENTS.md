@@ -187,3 +187,17 @@ The self-testing apparatus (see the `self-test` skill) verifies the integrity of
 2. **Behavioral evals** — full agentic workflow; slower.
    Behavioral evals verify whether skills, subagents, and AGENTS.md rules actually behave as documented. Since they require headless Agent executions, they are run entirely via the `self-test` skill rather than as a git hook.
    To run them, simply ask the agent: "run the self-test skill" or "run behavioral evals".
+
+## Agent skills
+
+### Issue tracker
+This project tracks work as local markdown issues under `docs/issues/`, managed
+through the `issue-tracker` skill. A top-level `NN-<slug>/` directory is a
+**main-issue** — one branch `issue/<slug>`, one worktree, one pull request — and
+its `issue.md` holds the spec; the directories nested inside it are its
+**child-issues**, the vertical slices of that one PR. Do not edit issue files by
+hand — use the `issue-tracker` skill so status transitions and blocker rules
+stay valid.
+
+See `docs/agents/issue-tracker.md` for the state model and the workflow for
+implementing tracked issues.
