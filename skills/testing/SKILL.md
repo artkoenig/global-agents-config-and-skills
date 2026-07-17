@@ -1,20 +1,21 @@
 ---
 name: testing
-description: Performs an agnostic three-axis verification of the current changes - Standards (static analysis plus code-smell review over the whole codebase), Specification (review of the diff against optional acceptance criteria), and Tests (running the local test suite).
+description: Performs an agnostic four-axis verification of the current changes - Standards (static analysis plus code-smell review over the whole codebase), Specification (review of the diff against optional acceptance criteria), Tests (running the local test suite), and Docs (review of the diff against the repository's documentation).
 user-invocable: true
 ---
 
 # Testing and Verification
 
-Use this skill to secure the current changes with a three-axis verification. Each axis answers a different question and operates on a different scope, so they run independently and in parallel. Each axis is a dedicated subagent, so its analysis, logs, and file reads never enter this conversation:
+Use this skill to secure the current changes with a four-axis verification. Each axis answers a different question and operates on a different scope, so they run independently and in parallel. Each axis is a dedicated subagent, so its analysis, logs, and file reads never enter this conversation:
 
 - **Axis A - Standards** (`standards-reviewer` subagent): "Is the code healthy?" Static analysis plus a code-smell review over the **entire codebase**.
 - **Axis B - Specification** (`spec-reviewer` subagent, optional): "Did we build the right thing?" Reviews the **diff** against a specification. Runs only when a specification source is available.
 - **Axis C - Tests** (`test-runner` subagent): "Does it still work?" Runs the project's **test suite**.
+- **Axis D - Docs** (`docs-reviewer` subagent): "Is the documentation still consistent with what changed?" Reviews the **diff** against the repository's own documentation. Always runs; it needs no specification source. Its report is written in German by design.
 
-Each subagent carries its own model and tool restrictions, so the axes cost what they are worth: `opus` for the code-smell judgment of Axis A, `sonnet` for the diff-vs-spec comparison of Axis B, and `haiku` for running a command in Axis C. All three are read-only — they report, they never fix.
+Each subagent carries its own model and tool restrictions, so the axes cost what they are worth: `opus` for the code-smell judgment of Axis A, `sonnet` for the diff-vs-spec comparison of Axis B, `haiku` for running a command in Axis C, and `sonnet` for the documentation-drift review of Axis D. All four are read-only — they report, they never fix.
 
-The skill is agnostic - it works on any repository and does not depend on a specific issue workspace or directory layout. In the `issue-tracker` workflow it runs exactly once, before resolving a **main-issue** (an issue with children) — see [resolve.md](../issue-tracker/workflows/resolve.md) step 2 — against the whole subtree's spec. A child-issue's own `issue-implementer` Verify step runs only the test suite (via `test-runner`), not this full three-axis skill.
+The skill is agnostic - it works on any repository and does not depend on a specific issue workspace or directory layout. In the `issue-tracker` workflow it runs exactly once, before resolving a **main-issue** (an issue with children) — see [resolve.md](../issue-tracker/workflows/resolve.md) step 2 — against the whole subtree's spec. A child-issue's own `issue-implementer` Verify step runs only the test suite (via `test-runner`), not this full four-axis skill.
 
 ## Inputs (optional)
 
@@ -26,17 +27,17 @@ The command inputs for the other two axes (the static-analysis command list and 
 
 ## Workflow
 
-### 1. Three-Axis Verification
+### 1. Four-Axis Verification
 
-Spawn the three axis subagents **in parallel, in a single message**, passing each the inputs it expects (repo root, the main branch, and - for Axis B - the **acceptance-criteria** path from the invocation, if one was given). Each subagent's definition documents its own inputs.
+Spawn the four axis subagents **in parallel, in a single message**, passing each the inputs it expects (repo root, the main branch, and - for Axis B - the **acceptance-criteria** path from the invocation, if one was given). Each subagent's definition documents its own inputs.
 
-- Always run **Axis A (Standards)** and **Axis C (Tests)**.
+- Always run **Axis A (Standards)**, **Axis C (Tests)**, and **Axis D (Docs)**. Axis D always runs — it compares the diff against the repository's own documentation and so needs no specification source.
 - Run **Axis B (Specification)** only if a specification source is available - the **acceptance-criteria** argument, or otherwise a spec/PRD file, ticket, or path the user names. If none is found, skip it and note in the report that no specification was available.
 
 ### 2. Consolidation
 
-- Present each subagent's report separately under its heading: `## Standards`, `## Specification` (if run), and `## Tests`.
-- Summarize the result in one line: number of findings per axis, the most critical comment per axis, and whether the test suite is green.
+- Present each subagent's report separately under its heading: `## Standards`, `## Specification` (if run), `## Tests`, and `## Docs`. The `## Docs` section is the `docs-reviewer`'s German report verbatim, and it is always present — showing either the documentation drift it found or that nichts gefunden wurde.
+- Summarize the result in one line: number of findings per axis (including Docs), the most critical comment per axis, and whether the test suite is green.
 
 ### 3. Conclusion
 
@@ -57,6 +58,7 @@ instructions when spawning them, just pass the inputs:
 | A - Standards | `standards-reviewer` | whole codebase | `opus` |
 | B - Specification | `spec-reviewer` | the diff | `sonnet` |
 | C - Tests | `test-runner` | the test suite | `haiku` |
+| D - Docs | `docs-reviewer` | the diff | `sonnet` |
 
 If a subagent is unavailable in the current environment, say so rather than
 inlining its work into this conversation - that would defeat the point of the

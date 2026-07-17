@@ -17,7 +17,7 @@ below.
 
 ## The subagents
 
-`agents/` holds five subagents whose job is to keep the main conversation's
+`agents/` holds six subagents whose job is to keep the main conversation's
 context small: the expensive, read-heavy work happens in their context and only a
 summary comes back.
 
@@ -28,6 +28,7 @@ summary comes back.
 | `standards-reviewer` | `opus` | Axis A of `testing`: static-analysis gate + code-smell review of the whole codebase. |
 | `spec-reviewer` | `sonnet` | Axis B of `testing`: the diff against its acceptance criteria. |
 | `test-runner` | `haiku` | Axis C of `testing`: run the suite, report green/red. |
+| `docs-reviewer` | `sonnet` | Axis D of `testing`: the diff against the repository's own documentation. |
 
 Each declares the skills it needs via the `skills:` frontmatter field, so the
 principles are preloaded into the subagent's context rather than costing the main
