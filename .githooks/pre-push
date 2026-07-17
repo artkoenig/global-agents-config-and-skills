@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# pre-push hook — enforces the deterministic git workflow rules:
+#   7. branch name matches ^issue/[a-z0-9-]+$
+#   8. no push whose target ref is a protected branch (main/master)
+#   9. no pushed commit carries a Co-authored-by trailer
+#
+# The checker (git_workflow_rules.py) lives next to this hook in the config repo
+# (.githooks/ and scripts/ are siblings), so it is located relative to THIS file
+# — not via the pushing repo's toplevel. That lets any repo point core.hooksPath
+# at this config repo's (or its clone's) .githooks and share one implementation
+# without copying files. Sanctioned override: `git push --no-verify`.
+set -euo pipefail
+
+hook_dir=$(cd "$(dirname "$0")" && pwd)
+exec python3 "${hook_dir}/../scripts/git_workflow_rules.py" pre-push "$@"

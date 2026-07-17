@@ -12,33 +12,38 @@ verified — `resolved` means "implemented and passing".
    python3 <skill>/scripts/tracker.py comment "<issue-id>" "Implemented X; see <area>. Tests green."
    ```
 
-2. **If this issue is a feature, verify it first.** Check whether it has
-   children:
+2. **If this issue is a main-issue, verify it first.** Check whether it has
+   child-issues:
    ```bash
    python3 <skill>/scripts/tracker.py list --parent "<issue-id>"
    ```
-   Any results mean this is a feature, not a leaf — its whole subtree is now
-   implemented, and that is exactly the point to run the `testing` skill
-   (three-axis verification), once per feature, not per leaf issue. It should
-   already be `claimed` (see [implement.md](implement.md) — a feature is claimed
-   the moment work starts on any of its children, same as a leaf). Pass the
-   feature's own issue directory as the acceptance-criteria source so Axis B
+   Any results mean this is a main-issue, not a child-issue — its whole subtree
+   is now implemented, and that is exactly the point to run the `testing` skill
+   (three-axis verification), once per main-issue, not per child-issue. It should
+   already be `claimed` (see [implement.md](implement.md) — a main-issue is
+   claimed the moment work starts on any of its child-issues). Pass the
+   main-issue's own issue directory as the acceptance-criteria source so Axis B
    reviews the diff against its spec:
    ```
    /testing <issue-tracker-dir>/<issue-id>
    ```
    If it surfaces blocking findings, fix them (or hand them to the user) and
-   re-run `testing` — do not resolve a feature that hasn't passed verification.
-   Leaf issues skip this step: their own test run at implementation time (see
-   `issue-implementer`) already covers that single vertical slice.
+   re-run `testing` — do not resolve a main-issue that hasn't passed
+   verification. Child-issues skip this step entirely: they never run the full
+   three-axis `testing` skill. During implementation, `issue-implementer`'s own
+   Verify step runs only the test suite (via the `test-runner` subagent) against
+   that single vertical slice — the Standards and Spec axes run just once, here
+   at the main-issue level.
 
 3. **Set the state to resolved:**
    ```bash
    python3 <skill>/scripts/tracker.py set-status "<issue-id>" resolved
    ```
-   The tracker rejects this if the issue is a parent with open children — resolve
-   the children first. A feature therefore becomes `resolved` only when its whole
-   subtree is done **and**, per step 2, has passed verification.
+   The tracker rejects this if the issue is a main-issue with open child-issues —
+   resolve the child-issues first. A main-issue therefore becomes `resolved` only
+   when its whole subtree is done **and**, per step 2, has passed verification.
+   Resolving the main-issue is the gate for opening its pull request — one PR for
+   the whole main-issue.
 
 4. **Commit the changes.** Commit the code together with this issue's status
    change, so the tracker state and the work it describes stay in one commit.

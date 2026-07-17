@@ -29,17 +29,17 @@ resolved        → ready-for-agent               (reopen)
 Any other transition is rejected by `tracker.py set-status`. Setting an issue to
 its current state is a no-op and always allowed.
 
-## Parent / child rule
+## Main-issue / child-issue rule
 
-A parent issue (one with child issues) cannot be set to `resolved` while any
-child is still open. Because resolving each child is itself guarded, this holds
-recursively: a feature is only "done" once its whole subtree is done.
+A main-issue cannot be set to `resolved` while any child-issue is still open.
+Because resolving each child-issue is itself guarded, a main-issue is "done" —
+and its pull request ready to open — only once its whole subtree is `resolved`.
 
 ## How states map to work
 
 - New bug reports and ideas start at `needs-triage`.
-- The decompose workflow creates child issues directly at `ready-for-agent`,
-  because they come from an already-specified parent, and advances the parent
-  itself to `ready-for-agent` once it has been sliced.
-- `next` only ever returns `ready-for-agent` leaf issues whose blockers are
+- The decompose workflow creates child-issues directly at `ready-for-agent`,
+  because they come from an already-specified main-issue, and advances the
+  main-issue itself to `ready-for-agent` once it has been sliced.
+- `next` only ever returns `ready-for-agent` child-issues whose blockers are
   `resolved`.

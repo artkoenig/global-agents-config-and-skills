@@ -64,7 +64,12 @@ for skill in "${repo_dir}/skills"/*/; do
   echo "Linked skill: $(basename "$skill")"
 done
 
-# 3. Same treatment for subagents: one file per subagent, not a directory.
+# 3. Same treatment for subagents. Each subagent is a folder
+#    (agents/<name>/agent.md, with its evals/ colocated), so link the folder,
+#    mirroring the skills step above. Claude Code scans ~/.claude/agents
+#    recursively and takes a subagent's identity from its agent.md `name` field,
+#    not from the path, so the folder layout loads without any scoped-name
+#    surprises (those only apply to plugin agents/ directories).
 mkdir -p "$agents_dir"
 for link in "$agents_dir"/*; do
   [ -L "$link" ] || continue
@@ -72,9 +77,9 @@ for link in "$agents_dir"/*; do
     "${repo_dir}/agents/"*) rm -f "$link" ;;   # prune renamed/removed agents
   esac
 done
-for agent in "${repo_dir}/agents"/*.md; do
-  [ -f "$agent" ] || continue
-  ln -sfn "$agent" "${agents_dir}/$(basename "$agent")"
+for agent in "${repo_dir}/agents"/*/; do
+  [ -f "${agent}agent.md" ] || continue
+  ln -sfn "${agent%/}" "${agents_dir}/$(basename "$agent")"
   echo "Linked agent: $(basename "$agent")"
 done
 
@@ -84,7 +89,17 @@ if [ -f "${repo_dir}/AGENTS.md" ]; then
   echo "Synced AGENTS.md -> ~/.claude/CLAUDE.md"
 fi
 
+# 5. Activate the deterministic pre-push workflow checks for this project by
+#    pointing its git hooks at the agents repo's .githooks. The hook locates its
+#    checker script relative to itself, so nothing is copied into the project.
+project_dir="${CLAUDE_PROJECT_DIR:-.}"
+if [ -d "${repo_dir}/.githooks" ] && \
+   git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$project_dir" config core.hooksPath "${repo_dir}/.githooks"
+  echo "Set core.hooksPath -> ${repo_dir}/.githooks"
+fi
+
 echo "✅ Hook finished successfully."
 
-# 5. Tell Claude Code to reload skills now that they're in place.
+# 6. Tell Claude Code to reload skills now that they're in place.
 echo '{"hookSpecificOutput": {"hookEventName": "SessionStart", "reloadSkills": true}}' >&3

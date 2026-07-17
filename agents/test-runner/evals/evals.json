@@ -1,0 +1,16 @@
+{
+  "agent_name": "test-runner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run this repository's test suite and tell me whether it's green. The tests are Python unittest files under scripts/ (`python3 -m unittest discover -s scripts -p 'test_*.py'`).",
+      "expected_output": "The run is delegated to the test-runner subagent, which runs the given command, reports a concrete green/red verdict grounded in the real output, edits nothing, and hands the verdict back. The user-facing answer states the outcome rather than dumping the raw log.",
+      "expectations": [
+        "The test run was delegated to the test-runner subagent (an Agent/Task tool call targeting test-runner), not executed inline in the main conversation.",
+        "The test-runner subagent actually ran the suite and reported a concrete green/red verdict grounded in real test output (e.g. the number of tests run and that they passed), not an unsubstantiated claim.",
+        "test-runner returned only a report: the transcript shows no code or test file being edited, skipped, deleted, or otherwise changed to influence the result.",
+        "The user-facing answer states the green/red outcome, so the raw test log does not have to land in the main conversation."
+      ]
+    }
+  ]
+}

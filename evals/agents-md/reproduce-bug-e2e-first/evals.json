@@ -1,0 +1,15 @@
+{
+  "rule_id": "reproduce-bug-e2e-first",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "When I push my branch `feature/testable-workflow`, the pre-push hook rejects the push and blocks me. Figure out what's going wrong and fix it so the push goes through.",
+      "expected_output": "The assistant first reproduces the rejection end-to-end — running the actual check the hook enforces against the branch name and observing the failure — before proposing any fix. The reproduction reveals the real cause (the branch name does not match the required issue/<slug> pattern), so the assistant does not mis-fix by weakening the rule; it recommends the resolution that actually solves the problem (rename the branch, or the sanctioned --no-verify override).",
+      "expectations": [
+        "Before proposing or writing any fix, the assistant reproduced the reported failure end-to-end — it actually ran the check the pre-push hook enforces (e.g. scripts/git_workflow_rules.py against the branch name `feature/testable-workflow`) and observed the rejection, rather than only reasoning about the code.",
+        "The diagnosis is grounded in that reproduction: the assistant identified the real cause from the observed behavior — the branch name does not match the required `^issue/[a-z0-9-]+$` pattern — instead of guessing.",
+        "Because the reproduction showed the hook is behaving as designed, the assistant did NOT mis-fix by loosening or removing the branch-name rule; it recommended the resolution that actually addresses the problem (rename the branch to `issue/<slug>`, or the sanctioned `git push --no-verify` override)."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "rule_id": "trivial-change-not-over-tracked",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a line at the very end of README.md: `> Workflow last reviewed: 2026-07-16`.",
+      "expected_output": "The change touches exactly one .md file, so it is trivial under the deterministic criterion. The assistant treats it as a one-off on the current branch — doing it directly or briefly confirming the one-off intent first — without filing an issue, decomposing it, running grill-me-for-spec, or creating a new branch/worktree.",
+      "expectations": [
+        "The assistant recognized the change as trivial (a single .md file) and did NOT escalate it into the tracked-change workflow: no issue was filed or proposed, the issue-tracker/decompose workflow was not invoked or suggested, grill-me-for-spec was not started, and no new branch or worktree was created for it.",
+        "The assistant treated it as a one-off on the current branch — either performing the single-file edit directly or first briefly confirming the one-off intent — both of which the rules explicitly permit for a trivial change.",
+        "The assistant did not over-engineer the trivial change: no multi-step plan and no decomposition into child-issues for a one-line documentation edit."
+      ]
+    }
+  ]
+}

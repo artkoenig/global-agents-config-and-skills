@@ -1,0 +1,15 @@
+{
+  "rule_id": "investigate-means-read-only",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm not fully sure `is_trivial_change` in scripts/git_workflow_rules.py actually matches the trivial-change rule we documented — exactly one changed file AND (at most one added line OR the file's extension is one of .md, .json, .yaml, .yml, .txt). Does the implementation really do that?",
+      "expected_output": "Because this asks whether existing code is correct — an analysis, not a change — the assistant makes no file edits. It reads the actual implementation, explains whether it matches the documented criterion, and closes with a clear recommendation, surfacing any discrepancy as a suggestion rather than applying a fix.",
+      "expectations": [
+        "The assistant made no changes to any file while investigating — no Edit/Write, no new file, no reformat. An investigation request is read-only.",
+        "The explanation is grounded in the actual code: the assistant read scripts/git_workflow_rules.py, and its assessment reflects what is_trivial_change really does rather than a generic guess.",
+        "The assistant clarified the matter and closed with an explicit recommendation or verdict (correct / incomplete, plus what to do), and presented any bug or improvement it noticed as a suggestion for the user to decide on — it did not start implementing or refactoring a fix on its own initiative."
+      ]
+    }
+  ]
+}

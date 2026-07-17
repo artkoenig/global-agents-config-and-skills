@@ -2,8 +2,8 @@
   Instead, prefer quality, simplicity, robustness, scalability, and long term maintainability.
 - When doing bug fixes, always start with reproducing the bug in an E2E setting as closely aligned with how an end user experiences it. This makes sure you find the real problem so your fix will actually solve it.
 - When starting a new project, use the `grill-me-for-spec` skill to turn the idea into a written specification (PRD) before building.
-- Once that PRD exists, ask whether to set up issue tracking and break it into issues via the `issue-tracker` skill.
-- When a project has issue tracking set up (a `docs/issues/` directory exists, or `ISSUE_TRACKER_DIR` is set), do not begin code changes before asking me whether to create an issue for the work first. If I say yes, file it via the `issue-tracker` skill and proceed through the tracked workflow; if I decline, implement directly.
+- Once that PRD exists, decompose it into one main-issue plus child-issues via the `issue-tracker` skill. Issue tracking is **mandatory** for every non-trivial change — do not ask whether to track it, just do it. The only escape hatch is a trivial change, defined deterministically under "Git & Version Control".
+- **Ask before code changes.** Never start editing code on your own initiative. When I request work that touches code, confirm scope with me first — for non-trivial work that means filing the issue and confirming its breakdown before implementing; for a trivial change, confirm the one-off intent. (This rule is safeguarded by a behavioral eval; see the `self-test` skill.)
 - Critically challenge all requested changes. Before implementing or accepting any modification, verify it against the existing documentation files to ensure consistency and prevent contradictions. Keep documentation always up-to-date.
 - When I ask you to investigate a matter, do not make any changes to existing files. Clarify the matter and provide an explanation with a recommendation.
 - If you are uncertain during implementation and need to consult the web, place absolute priority on official documentation without exception. Conduct an intensive deep search directly on official developer sites or API references, to find the solution before considering secondary sources (such as forums or blogs).
@@ -11,14 +11,34 @@
 - Keep your responses in the main conversation precise and short. State findings, decisions, and what changed — skip recaps, restated file contents, and step-by-step narration. Push detail into subagent reports, files, or tool output instead of the conversation; this conserves context.
 
 
+## Cloud Session Bootstrap Trigger
+
+**Trigger**: At the start of any session, in any git repository I own, before
+other work begins (including before the branch decision below). A repo is
+mine if it has no remote yet, or its `origin` points to `github.com` under
+the `artkoenig` account — anything else (a work, client, or third-party repo)
+is out of scope; skip it silently, don't ask.
+**Action**: Check whether two things are in place: (a) `.claude/hooks/session-start.sh`
+is installed and matches the `cloud-session-bootstrap` skill's canonical
+version, and (b) `core.hooksPath` points at this config repo's `.githooks` so
+the deterministic `pre-push` checks are active. The checks themselves are never
+copied into other repos — a target repo's `core.hooksPath` points at this config
+repo's (or, in cloud sessions, its clone's) `.githooks`, and the hook locates
+its checker relative to itself. If either is missing or has drifted, run the
+`cloud-session-bootstrap` skill to install/update the session-start hook and set
+`core.hooksPath`. This is mandatory by default for every repo of mine — not
+something to wait for me to ask for. Once set, the `pre-push` checks apply to
+every worktree automatically, since all worktrees share one `.git`.
+
 ## Git & Version Control
 
-Applies immediately, at the start of any task, whenever the files involved are
-tracked in a git repository — before any search, directory listing, or file
-read.
-
-In your own checkout, before making any changes:
+Decide the branch **once**, at the very start of a task, before any research,
+`grill-me-for-spec` session, or implementation begins — not something to
+revisit once work is underway. In your own checkout:
 - Check whether the target files are versioned.
+- Check for untracked files (`git status`). If any exist, ask me whether they
+  should be committed or discarded before proceeding — don't decide either
+  way yourself.
 - Print the current branch name and ask me whether to use it or create a new
   one.
 - Before creating a new branch, check out main/master first and make sure it's
@@ -27,30 +47,94 @@ In your own checkout, before making any changes:
   completed PR, ask me whether to start a new branch instead of reusing the
   old one.
 
-Naming a new branch: `<type>/<short-kebab-slug>`, where `<type>` is one of:
-- `feature/` — new functionality
-- `fix/` — bug fixes
-- `refactor/` — restructuring with no behavior change
-- `chore/` — tooling, config, docs, dependencies, or other maintenance
+Branch naming: every work branch is `issue/<slug>` and maps 1:1 to exactly one
+top-level issue ("main-issue"). This is the **only** valid branch pattern — the
+old `feature|fix|refactor|chore` prefixes are gone; that category now lives in a
+`type` field inside the issue's `issue.md` (`feature|fix|refactor|chore`). The
+`pre-push` hook rejects any branch name that doesn't match `^issue/[a-z0-9-]+$`
+(see `scripts/git_workflow_rules.py`).
 
-The one exception is the `issue-tracker` workflow, which names branches
-`issue/<slug-of-issue-id>` instead — that ties the branch 1:1 back to a tracker
-id, which the `<type>/` scheme can't express. Don't rename those.
+The relationship is strict: **1 main-issue = 1 branch `issue/<slug>` = 1
+worktree = 1 pull request.** The PR is opened only once every child-issue of the
+main-issue is resolved. `main` is never pushed to locally — it advances only
+through a GitHub PR merge, and the hook rejects any push whose target ref is
+`main`.
+
+**Trivial exception.** A change is trivial — and may skip issue tracking and its
+own branch — only if it meets the deterministic criterion in
+`is_trivial_change` (`scripts/git_workflow_rules.py`): **exactly one changed
+file AND (at most one added line OR the file's extension is one of `.md`,
+`.json`, `.yaml`, `.yml`, `.txt`)**. A trivial change rides on the currently
+checked-out branch; it is never committed directly onto `main`.
+
+Once that branch is checked out, everything downstream rides on it without
+re-deciding: research, `grill-me-for-spec`, decomposing into issues, and
+implementation. Implementation itself happens in worktrees seeded from this
+branch (see Worktree Isolation below) — no (sub)agent doing the actual coding
+ever has to reason about which branch it's on; you, the main conversation,
+merge their worktree branches back into it.
 
 Commits & pushes, in your own checkout:
 - Never commit or push automatically — only when I explicitly ask.
-- Never add an agent name as commit co-author.
+- Never add a `Co-Authored-By:` trailer of any kind. This is a
+  single-maintainer repo with no allow-list; the `pre-push` hook rejects any
+  pushed commit whose message carries one.
 - If orphaned or merged branches exist, ask me before deleting them.
+- Before creating a PR, make sure every local commit is actually pushed to its
+  remote branch — a PR opened against a stale remote silently misses whatever
+  hasn't been pushed yet.
 
-The "ask me" steps above assume a human is present to answer. **Subagents
-cannot ask** (no `AskUserQuestion`) and never apply those steps directly —
-they follow whatever explicit instructions their own definition gives them
-instead. The one written exception: a subagent running with `isolation:
-worktree` (e.g. `issue-implementer`) commits its own work without asking,
-because an uncommitted worktree can't be handed back any other way. That
-exception covers committing inside that worktree only — never pushing, and
-never the merge step back in the main checkout, where the rules above apply
-in full.
+The "ask me" steps above assume a human is present to answer, which is why
+they're resolved upfront in the main conversation — subagents never see them.
+The one written exception: a subagent running with `isolation: worktree`
+(e.g. `issue-implementer`) commits its own work without asking, because an
+uncommitted worktree can't be handed back any other way. That exception
+covers committing inside that worktree only — never pushing, and never the
+merge step back in the main checkout, where the rules above apply in full.
+
+## Worktree Isolation
+
+Once the branch above is selected, code-writing work — direct or delegated —
+happens in an isolated git worktree seeded from it, never in the checkout
+itself:
+- **Delegating**: give any code-writing subagent `isolation: worktree` —
+  already the default for `issue-implementer`.
+- **Working directly** (no subagent involved): enter a worktree yourself
+  (`EnterWorktree`, or `--worktree` at session start), unless the change meets
+  the trivial criterion under "Git & Version Control" or I've said to work
+  directly in the current checkout.
+
+`worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
+this to work: it's what makes a new worktree branch from whatever you just
+checked out above instead of the repository's default branch. Without it,
+every worktree would silently restart from `main`, ignoring the branch
+decided upfront — which is exactly the branch-awareness problem this section
+exists to remove from implementation.
+
+**Exception — read-only research/review/test subagents**
+(`spec-researcher`, `standards-reviewer`, `spec-reviewer`, `test-runner`): do
+**not** isolate these. Their whole job is to judge the actual current state,
+uncommitted changes included (`spec-reviewer` diffs against the working tree
+by design, `test-runner` runs the suite as it sits on disk) — a worktree only
+ever reflects committed history, so isolating them would make them silently
+judge a stale snapshot instead of what's really there.
+
+**Two-level worktree layout.** Worktrees exist at two nested levels:
+
+- *Main-issue level (you manage this).* Several main-issues can run locally at
+  the same time — each in its own worktree under `.worktrees/`, driven by its
+  own independent Claude Code session. There is no shared orchestrator between
+  those sessions; only the shared `.git` connects them. `.worktrees/` is listed
+  in `.gitignore` and is never committed.
+- *Child-issue level (the session manages this).* Within one main-issue's
+  session, its child-issues are implemented in parallel by `issue-implementer`
+  subagents (`isolation: worktree`). They merge **sequentially, in dependency
+  order** (from `tracker.py`) into the main-issue branch. After each merge the
+  child worktree is removed (`git worktree remove`); no lasting child branches
+  are left behind.
+
+Register every worktree flat against the shared `.git` so nesting never
+produces `.worktrees/.worktrees/`.
 
 ## Delegation to subagents
 
@@ -76,7 +160,30 @@ myself stay in the main conversation.
 Do not delegate trivial or single-file work either. A subagent that costs more to
 brief than to do is a loss, not a saving.
 
+This delegation policy is safeguarded by a behavioral eval (see the
+`self-test` skill), which checks that the documented delegation choices
+actually happen.
+
 ## Engineering Principles Trigger
 
 **Trigger**: BEFORE making architectural decisions, choosing frameworks/libraries, defining module or component boundaries, planning/executing cross-module refactoring, OR writing, editing, generating, or refactoring any code files or unit tests.
 **Action**: You MUST read and follow the `engineering-principles` skill.
+
+This trigger is safeguarded by a behavioral eval (see the `self-test`
+skill), which checks that a code-touching request actually causes the
+`engineering-principles` skill to be read before the code is written.
+
+## Running the Agent self-tests manually
+
+The self-testing apparatus (see the `self-test` skill) verifies the integrity of this repository.
+
+1. **Deterministic checks** — instant, no LLM. The quick default:
+
+   ```bash
+   python3 -m unittest discover -s scripts -p 'test_*.py'
+   ```
+   These deterministic checks also run automatically via the `pre-push` hook. A failure blocks the push; `git push --no-verify` is the sanctioned override.
+
+2. **Behavioral evals** — full agentic workflow; slower.
+   Behavioral evals verify whether skills, subagents, and AGENTS.md rules actually behave as documented. Since they require headless Agent executions, they are run entirely via the `self-test` skill rather than as a git hook.
+   To run them, simply ask the agent: "run the self-test skill" or "run behavioral evals".

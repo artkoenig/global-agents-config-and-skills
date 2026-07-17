@@ -1,0 +1,15 @@
+{
+  "skill_name": "grill-me-for-spec",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to add archiving to the issue-tracker, so resolved issues can be moved out of the active working set.",
+      "expected_output": "Because the feature is under-specified, the assistant enters the grill-me-for-spec flow rather than implementing: it grounds itself in the existing issue-tracker (its states and structure) and asks one focused clarifying question at a time, each with a recommended answer, instead of assuming requirements or writing code.",
+      "expectations": [
+        "The assistant did not jump into implementation — no skill, code, or tracker files were created or edited to build the archive capability.",
+        "The assistant engaged the grill-me-for-spec specification flow (whether by invoking the skill or clearly following it): it asked a focused clarifying question, one at a time, and offered its own recommended answer with it — the skill's signature behavior — rather than assuming the requirements.",
+        "The questioning is grounded in the actual repository (e.g. the issue-tracker's existing states/structure), and the assistant did not fabricate a finished PRD or a full plan from assumptions without the user's input."
+      ]
+    }
+  ]
+}
