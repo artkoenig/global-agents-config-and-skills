@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -40,3 +40,4 @@ oder komplett auf jede Verifikation verzichten und alles dem Main-Issue-Gate
       "Dispatch") dokumentiert.
 
 ## Comments
+- Testing (drei Achsen) abgeschlossen: Tests 21/21 gruen, Spec-Review 0 Findings (alle AC erfuellt, kein Scope-Creep), Standards-Review fand einen widerspruechlichen Doku-Satz in skills/testing/SKILL.md:17 (beschrieb noch die alte pro-Child-Testing-Logik + veralteten Begriff 'feature'), der korrigiert und erneut gruen getestet wurde.
