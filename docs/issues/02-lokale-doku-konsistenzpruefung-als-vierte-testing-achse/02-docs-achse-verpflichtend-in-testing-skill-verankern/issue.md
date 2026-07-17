@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: feature
 Blocked by: [01]
 
@@ -31,3 +31,4 @@ Blocked by: [01]
       erwähnen).
 
 ## Comments
+- skills/testing/SKILL.md um verpflichtende vierte Achse D - Docs (docs-reviewer, Scope: Diff, Modell sonnet) erweitert: Intro/Beschreibung, Frontmatter-description, Workflow-Schritt 1 (Always run A, C, D), Konsolidierung (## Docs immer vorhanden) und Dispatch-Tabelle. Alle 'three-axis'-Stellen auf vier Achsen aktualisiert.
