@@ -1,6 +1,6 @@
 ---
 name: standards-reviewer
-description: "Axis A of the three-axis verification: is the code healthy? Runs the project's configured static analysis as a blocking gate, then reviews the WHOLE codebase for the judgment-level code smells a linter cannot catch (Feature Envy, Divergent Change, Shotgun Surgery, Speculative Generality). Scope is the entire codebase, not the diff. Use it as part of the `testing` skill, or on its own for a code-health audit. Read-only: it reports findings, it does not fix them."
+description: "Axis A of the four-axis verification: is the code healthy? Runs the project's configured static analysis as a blocking gate, then reviews the WHOLE codebase for the judgment-level code smells a linter cannot catch (Feature Envy, Divergent Change, Shotgun Surgery, Speculative Generality). Scope is the entire codebase, not the diff. Use it as part of the `testing` skill, or on its own for a code-health audit. Read-only: it reports findings, it does not fix them."
 tools: Read, Glob, Grep, Bash
 model: opus
 skills: engineering-principles

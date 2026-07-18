@@ -19,7 +19,7 @@ verified — `resolved` means "implemented and passing".
    ```
    Any results mean this is a main-issue, not a child-issue — its whole subtree
    is now implemented, and that is exactly the point to run the `testing` skill
-   (three-axis verification), once per main-issue, not per child-issue. It should
+   (four-axis verification), once per main-issue, not per child-issue. It should
    already be `claimed` (see [implement.md](implement.md) — a main-issue is
    claimed the moment work starts on any of its child-issues). Pass the
    main-issue's own issue directory as the acceptance-criteria source so Axis B
@@ -30,7 +30,7 @@ verified — `resolved` means "implemented and passing".
    If it surfaces blocking findings, fix them (or hand them to the user) and
    re-run `testing` — do not resolve a main-issue that hasn't passed
    verification. Child-issues skip this step entirely: they never run the full
-   three-axis `testing` skill. During implementation, `issue-implementer`'s own
+   four-axis `testing` skill. During implementation, `issue-implementer`'s own
    Verify step runs only the test suite (via the `test-runner` subagent) against
    that single vertical slice — the Standards and Spec axes run just once, here
    at the main-issue level.

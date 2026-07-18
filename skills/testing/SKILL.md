@@ -47,11 +47,13 @@ Spawn the four axis subagents **in parallel, in a single message**, passing each
 
 ## The axis subagents
 
-Each axis is a subagent defined in `agents/` at the repository root of the
-`artkoenig-skills` bundle, loaded from `~/.claude/agents/` (or under the
-`artkoenig-skills:` prefix where the plugin is installed). Their definitions are
-the single source of truth for what each axis does - do not restate their
-instructions when spawning them, just pass the inputs:
+Each axis is a subagent defined in `agents/` at the repository root of
+[global-agents-config-and-skills](https://github.com/artkoenig/global-agents-config-and-skills),
+loaded into `~/.claude/agents/` by the `cloud-session-bootstrap` SessionStart
+hook (a direct git clone + symlink, not a plugin install — there is no plugin
+marketplace anymore). Their definitions are the single source of truth for
+what each axis does - do not restate their instructions when spawning them,
+just pass the inputs:
 
 | Axis | Subagent | Scope | Model |
 | --- | --- | --- | --- |
