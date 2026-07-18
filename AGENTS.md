@@ -94,15 +94,23 @@ merge step back in the main checkout, where the rules above apply in full.
 
 ## Worktree Isolation
 
+Every work session runs in an isolated git worktree, entered at the **start**
+of the session — as soon as it's clear the session will touch the repo, before
+research or implementation begins, not deferred until the first edit. Only two
+things stay in the checkout: a pure investigation/Q&A session that makes no
+changes (the "investigate = don't touch files" rule above), and a trivial
+change as defined under "Git & Version Control". If a session that began as
+investigation turns into work, enter the worktree at that point.
+
 Once the branch above is selected, code-writing work — direct or delegated —
-happens in an isolated git worktree seeded from it, never in the checkout
-itself:
+happens in that worktree, never in the checkout itself:
 - **Delegating**: give any code-writing subagent `isolation: worktree` —
   already the default for `issue-implementer`.
-- **Working directly** (no subagent involved): enter a worktree yourself
-  (`EnterWorktree`, or `--worktree` at session start), unless the change meets
-  the trivial criterion under "Git & Version Control" or I've said to work
-  directly in the current checkout.
+- **Working directly** (no subagent involved): you are already in the session's
+  worktree from the rule above; if not (e.g. the change looked trivial but
+  grew), enter one now (`EnterWorktree`, or `--worktree` at session start),
+  unless the change meets the trivial criterion under "Git & Version Control"
+  or I've said to work directly in the current checkout.
 
 `worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
 this to work: it's what makes a new worktree branch from whatever you just
