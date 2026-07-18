@@ -124,8 +124,9 @@ python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 
 If every child-issue now shows `resolved`, follow [resolve.md](resolve.md) on the
 **main-issue id** — it was already claimed in step 4, so this runs `testing`,
-resolves it, and reports. Only once the main-issue is `resolved` is the pull
-request opened — one PR for the whole main-issue. If child-issues remain open
+resolves it, then automatically pushes and opens the PR (resolve.md step 5).
+That PR is opened only once the main-issue is `resolved` — one PR for the whole
+main-issue. If child-issues remain open
 (elsewhere in the frontier, or blocked), leave the main-issue alone; it isn't
 done yet.
 
@@ -179,7 +180,7 @@ python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
 If every child-issue shows `resolved`, follow [resolve.md](resolve.md) on the
 main-issue id — it was already claimed in step 1, so this runs `testing`,
-resolves it, and reports. Only then is the PR opened, and you give the user a
+resolves it, and automatically pushes and opens the PR. Then give the user a
 brief summary of the changes made and the state of the git repository.
 
 ---

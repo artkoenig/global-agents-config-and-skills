@@ -43,7 +43,7 @@ verified — `resolved` means "implemented and passing".
    resolve the child-issues first. A main-issue therefore becomes `resolved` only
    when its whole subtree is done **and**, per step 2, has passed verification.
    Resolving the main-issue is the gate for opening its pull request — one PR for
-   the whole main-issue.
+   the whole main-issue, opened automatically in step 5.
 
 4. **Commit the changes.** Commit the code together with this issue's status
    change, so the tracker state and the work it describes stay in one commit.
@@ -51,8 +51,19 @@ verified — `resolved` means "implemented and passing".
    *Who commits depends on where you are*, per AGENTS.md's git rules:
    - Working **in your own worktree** (the `issue-implementer` subagent): commit
      without asking. Your worktree cannot be handed back otherwise. Never push.
-   - Working **in the user's checkout**: do not commit on your own. Report that
-     the issue is resolved and let the user decide when to commit.
+   - Working **in the user's checkout**: do not commit on your own — **except**
+     at the main-issue resolution gate, where reaching `resolved` authorizes
+     committing, pushing, and opening the PR without asking (step 5). For a
+     resolved **child**-issue in the user's checkout, report it and let the user
+     decide when to commit.
 
-5. **Continue.** If more issues remain, pick up the next one with
+5. **Open the pull request — automatically (main-issue only).** Once a
+   main-issue is `resolved` and committed, push its `issue/<slug>` branch and
+   open the pull request **without a separate ask** — reaching `resolved` is the
+   standing authorization for this (AGENTS.md, "Commits & pushes"). Push every
+   local commit first, or the PR misses unpushed work. One PR for the whole
+   main-issue; the merge stays manual, and the worktree teardown waits for it. A
+   **child**-issue never reaches this step — it has no PR of its own.
+
+6. **Continue.** If more issues remain, pick up the next one with
    `tracker.py next` (see the [implement workflow](implement.md)).
