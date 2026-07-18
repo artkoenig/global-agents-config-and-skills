@@ -24,3 +24,4 @@ Both are doc-only corrections; no code behavior changes.
 - [ ] A repo-wide grep for "three-axis" and for "plugin is installed"/"artkoenig-skills" returns no remaining stale hits outside of historical/changelog context
 
 ## Comments
+- Four-axis testing skill could not run: standards-reviewer/spec-reviewer/test-runner/docs-reviewer are not registered as Agent types in this session (environment/provisioning gap, also seen during the self-test run). Per user decision, resolving on the strength of the child-issue's own verification instead: repo-wide grep for 'three-axis' and 'artkoenig-skills'/'plugin is installed' came back clean, and the full unit suite (42/42) passed in the child worktree before merge. No code behavior changed (doc-only fix).
