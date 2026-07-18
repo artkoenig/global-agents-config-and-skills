@@ -111,6 +111,21 @@ changes (the "investigate = don't touch files" rule above), and a trivial
 change as defined under "Git & Version Control". If a session that began as
 investigation turns into work, enter the worktree at that point.
 
+**This rule is enforced, not just documented.** Unlike the branch-name/
+co-author rules under "Git & Version Control", whether an edit happened inside
+a worktree leaves no trace in the finished commit for a `pre-push` hook to
+check afterward — so it kept eroding as unverified guidance. A `PreToolUse`
+hook (`worktree_guard.py`, installed by `cloud-session-bootstrap`) now denies
+an `Edit`/`Write`/`NotebookEdit` call that would make a non-trivial change
+directly in the main checkout, before it happens. It approximates the trivial
+criterion below (it cannot see a diff that hasn't happened yet, so it is
+conservative: only a single file with a docs/config extension passes) and
+exempts the issue tracker's own directory, since `decompose.md`/`implement.md`
+write and merge `issue.md` files directly in the checkout by design. It does
+not see `Bash`-driven file writes — that gap is deliberate, not a sandbox. If
+I've explicitly said to work directly in the checkout for a task, touch
+`.claude/.worktree-bypass` to disable it for that session.
+
 Once the branch above is selected, code-writing work — direct or delegated —
 happens in that worktree, never in the checkout itself:
 - **Delegating**: give any code-writing subagent `isolation: worktree` —
