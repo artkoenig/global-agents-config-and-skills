@@ -11,3 +11,7 @@ __pycache__/
 # sanctioned location is .worktrees/ above, but ignore this defensively so a
 # native worktree never pollutes the main checkout's git status.
 .claude/worktrees/
+
+# Explicit, session-scoped override for the worktree_guard.py PreToolUse hook;
+# see AGENTS.md "Worktree Isolation". Local-only, never committed.
+.claude/.worktree-bypass

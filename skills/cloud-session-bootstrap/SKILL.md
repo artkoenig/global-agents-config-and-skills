@@ -52,8 +52,10 @@ new one. The files this skill writes (`.claude/hooks/session-start.sh`,
     (an older version only handles `skills/`) is the expected drift and safe
     to update. Anything else — custom logic someone added on top — must not be
     silently overwritten: show the user the diff and ask before replacing it.
+- `.claude/hooks/worktree_guard.py` — read it if present, same drift check as
+  above against [assets/worktree_guard.py](assets/worktree_guard.py).
 - `.claude/settings.json` — read it if present. Note whether it already wires a
-  `SessionStart` hook.
+  `SessionStart` hook and a `PreToolUse` hook.
 - `.claude/settings.json` / `.claude/settings.local.json` — check for
   leftover references to the retired marketplace (`enabledPlugins` or
   `extraKnownMarketplaces` mentioning `artkoenig`). If found, point them out
@@ -63,22 +65,24 @@ new one. The files this skill writes (`.claude/hooks/session-start.sh`,
   already points at this config repo's `.githooks` (see step 6). If unset or
   pointing elsewhere, it needs installing/updating.
 
-## 4. Install the hook script
+## 4. Install the hook scripts
 
 Copy [assets/session-start.sh](assets/session-start.sh) to
-`.claude/hooks/session-start.sh` in the target project, verbatim — it is
-already generic (it only hardcodes the agents repo's public clone URL, which
-is the same for every project). Make it executable (`chmod +x`).
+`.claude/hooks/session-start.sh`, and
+[assets/worktree_guard.py](assets/worktree_guard.py) to
+`.claude/hooks/worktree_guard.py`, in the target project, verbatim — both are
+already generic. Make both executable (`chmod +x`).
 
-Do not paraphrase or hand-retype the script. Copy the file as-is, so future
+Do not paraphrase or hand-retype either script. Copy them as-is, so future
 re-runs of this skill can diff byte-for-byte and detect drift reliably.
 
 ## 5. Wire `.claude/settings.json`
 
 Ensure the target's `.claude/settings.json` contains a `SessionStart` hook
-entry invoking the script, and sets `worktree.baseRef` to `"head"` (see
-AGENTS.md's Worktree Isolation rule — without it, worktree-isolated subagents
-branch from the default branch instead of the session's actual work):
+entry invoking `session-start.sh`, a `PreToolUse` hook entry invoking
+`worktree_guard.py`, and sets `worktree.baseRef` to `"head"` (see AGENTS.md's
+Worktree Isolation rule — without it, worktree-isolated subagents branch from
+the default branch instead of the session's actual work):
 
 ```json
 {
@@ -92,6 +96,17 @@ branch from the default branch instead of the session's actual work):
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/worktree_guard.py"
+          }
+        ]
+      }
     ]
   },
   "worktree": {
@@ -101,9 +116,17 @@ branch from the default branch instead of the session's actual work):
 ```
 
 - If `.claude/settings.json` doesn't exist, create it with just this content.
-- If it exists, merge both keys in without disturbing any other hooks or
-  settings already there. If the `SessionStart` entry with this exact command
-  already exists, leave it alone; same for an existing `worktree.baseRef`.
+- If it exists, merge all three keys in without disturbing any other hooks or
+  settings already there. If a `SessionStart` or `PreToolUse` entry with this
+  exact command already exists, leave it alone; same for an existing
+  `worktree.baseRef`.
+- `worktree_guard.py` is what actually enforces AGENTS.md's Worktree Isolation
+  rule (see that section) — it denies an `Edit`/`Write`/`NotebookEdit` call
+  that would make a non-trivial change directly in the main checkout, instead
+  of leaving that rule as unverified guidance. Tell the user about its escape
+  hatch: touching `.claude/.worktree-bypass` in the target project's main
+  checkout disables it for a session they've explicitly told to work directly
+  in the checkout.
 
 ## 6. Activate the deterministic pre-push checks (local)
 
@@ -145,6 +168,9 @@ Tell the user:
   `global-agents-config-and-skills` to clone it (it's a private repo), the same
   access it uses to clone the project itself.
 - That the new/changed files (`.claude/hooks/session-start.sh`,
-  `.claude/settings.json`) still need to be committed — per AGENTS.md's git
-  rules, don't commit them yourself unless asked. (`core.hooksPath` lives in
-  `.git/config`, which is not committed.)
+  `.claude/hooks/worktree_guard.py`, `.claude/settings.json`) still need to be
+  committed — per AGENTS.md's git rules, don't commit them yourself unless
+  asked. (`core.hooksPath` lives in `.git/config`, which is not committed.)
+- That `worktree_guard.py` runs on every `Edit`/`Write`/`NotebookEdit` call,
+  local or cloud — unlike `session-start.sh` and `core.hooksPath`, it is not
+  split by environment.
