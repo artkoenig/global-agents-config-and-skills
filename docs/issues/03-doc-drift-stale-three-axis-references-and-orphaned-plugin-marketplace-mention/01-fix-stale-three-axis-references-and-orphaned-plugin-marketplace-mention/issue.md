@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -28,3 +28,4 @@ Files to update:
 - [ ] `python3 -m unittest discover -s scripts -p 'test_*.py'` still passes (doc-only change, no behavior expected to break)
 
 ## Comments
+- Fixed all 8 stale three-axis references (standards-reviewer, spec-reviewer, test-runner, issue-implementer x3, resolve.md x2) and rewrote the plugin-marketplace paragraph in skills/testing/SKILL.md to describe the actual git-clone-and-symlink mechanism. Repo-wide grep for both patterns comes back clean; 42/42 tests still pass.

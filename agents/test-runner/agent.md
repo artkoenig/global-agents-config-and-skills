@@ -1,6 +1,6 @@
 ---
 name: test-runner
-description: "Axis C of the three-axis verification: does it still work? Finds the project's test command, runs the suite, and reports green/red with the failing output. Use it as part of the `testing` skill, or whenever you just need the suite run without its output landing in the main conversation. It runs and reports only — it never edits code or tests to make them pass."
+description: "Axis C of the four-axis verification: does it still work? Finds the project's test command, runs the suite, and reports green/red with the failing output. Use it as part of the `testing` skill, or whenever you just need the suite run without its output landing in the main conversation. It runs and reports only — it never edits code or tests to make them pass."
 tools: Read, Glob, Grep, Bash
 model: haiku
 color: yellow
