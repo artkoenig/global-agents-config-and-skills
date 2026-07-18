@@ -1,5 +1,8 @@
 .DS_Store
 
+# Python bytecode caches from running scripts/ tests.
+__pycache__/
+
 # Sandbox worktrees for local parallel main-issue work (1 main-issue = 1
 # worktree). Never committed; see AGENTS.md "Worktree Isolation".
 .worktrees/
