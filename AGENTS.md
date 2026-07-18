@@ -18,17 +18,21 @@ other work begins (including before the branch decision below). A repo is
 mine if it has no remote yet, or its `origin` points to `github.com` under
 the `artkoenig` account — anything else (a work, client, or third-party repo)
 is out of scope; skip it silently, don't ask.
-**Action**: Check whether two things are in place: (a) `.claude/hooks/session-start.sh`
+**Action**: Check whether three things are in place: (a) `.claude/hooks/session-start.sh`
 is installed and matches the `cloud-session-bootstrap` skill's canonical
-version, and (b) `core.hooksPath` points at this config repo's `.githooks` so
-the deterministic `pre-push` checks are active. The checks themselves are never
-copied into other repos — a target repo's `core.hooksPath` points at this config
-repo's (or, in cloud sessions, its clone's) `.githooks`, and the hook locates
-its checker relative to itself. If either is missing or has drifted, run the
-`cloud-session-bootstrap` skill to install/update the session-start hook and set
-`core.hooksPath`. This is mandatory by default for every repo of mine — not
-something to wait for me to ask for. Once set, the `pre-push` checks apply to
-every worktree automatically, since all worktrees share one `.git`.
+version, (b) `.claude/hooks/worktree_guard.py` is installed and current, with
+`.claude/settings.json` wiring it into `hooks.PreToolUse` and setting
+`worktree.baseRef` to `"head"` — this is what enforces the "Worktree Isolation"
+rule below, not just documents it, so a session missing it silently loses that
+enforcement — and (c) `core.hooksPath` points at this config repo's `.githooks`
+so the deterministic `pre-push` checks are active. The checks themselves are
+never copied into other repos — a target repo's `core.hooksPath` points at this
+config repo's (or, in cloud sessions, its clone's) `.githooks`, and the hook
+locates its checker relative to itself. If any of the three is missing or has
+drifted, run the `cloud-session-bootstrap` skill to install/update it. This is
+mandatory by default for every repo of mine — not something to wait for me to
+ask for. Once set, the `pre-push` checks apply to every worktree automatically,
+since all worktrees share one `.git`.
 
 ## Git & Version Control
 
