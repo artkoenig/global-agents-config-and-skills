@@ -75,7 +75,10 @@ ever has to reason about which branch it's on; you, the main conversation,
 merge their worktree branches back into it.
 
 Commits & pushes, in your own checkout:
-- Never commit or push automatically — only when I explicitly ask.
+- Never commit or push automatically — only when I explicitly ask. The one
+  standing exception is the main-issue resolution gate: reaching `resolved`
+  (whole subtree done, `testing` green) is itself the authorization to commit,
+  push, and open the PR for that main-issue — see the automatic-PR bullet below.
 - Never add a `Co-Authored-By:` trailer of any kind. This is a
   single-maintainer repo with no allow-list; the `pre-push` hook rejects any
   pushed commit whose message carries one.
@@ -83,6 +86,12 @@ Commits & pushes, in your own checkout:
 - Before creating a PR, make sure every local commit is actually pushed to its
   remote branch — a PR opened against a stale remote silently misses whatever
   hasn't been pushed yet.
+- **Automatic PR at resolution.** When a main-issue reaches `resolved`, push its
+  `issue/<slug>` branch and open the pull request automatically — no separate
+  ask; this standing rule *is* the authorization carved out above. Only the PR
+  is automated: the merge stays manual, and the worktree teardown (see "Worktree
+  Isolation") waits for that merge. This never applies to a child-issue — those
+  never get their own PR.
 
 The "ask me" steps above assume a human is present to answer, which is why
 they're resolved upfront in the main conversation — subagents never see them.
@@ -94,18 +103,35 @@ merge step back in the main checkout, where the rules above apply in full.
 
 ## Worktree Isolation
 
+Every work session runs in an isolated git worktree, entered at the **start**
+of the session — as soon as it's clear the session will touch the repo, before
+research or implementation begins, not deferred until the first edit. Only two
+things stay in the checkout: a pure investigation/Q&A session that makes no
+changes (the "investigate = don't touch files" rule above), and a trivial
+change as defined under "Git & Version Control". If a session that began as
+investigation turns into work, enter the worktree at that point.
+
 Once the branch above is selected, code-writing work — direct or delegated —
-happens in an isolated git worktree seeded from it, never in the checkout
-itself:
+happens in that worktree, never in the checkout itself:
 - **Delegating**: give any code-writing subagent `isolation: worktree` —
   already the default for `issue-implementer`.
-- **Working directly** (no subagent involved): enter a worktree yourself
-  (`EnterWorktree`, or `--worktree` at session start), unless the change meets
-  the trivial criterion under "Git & Version Control" or I've said to work
-  directly in the current checkout.
+- **Working directly** (no subagent involved): you are already in the session's
+  worktree from the rule above; if not (e.g. the change looked trivial but
+  grew), create one now under `.worktrees/` (`git worktree add .worktrees/<slug>
+  <branch>`) and continue the work there, unless the change meets the trivial
+  criterion under "Git & Version Control" or I've said to work directly in the
+  current checkout.
+
+**Use `.worktrees/`, not the native worktree tool.** Create these main-issue
+worktrees with `git worktree add .worktrees/<slug>` — do **not** use Claude
+Code's `EnterWorktree` or `--worktree`. Those put the worktree under
+`.claude/worktrees/`, outside this repo's `.worktrees/` convention and its
+`.gitignore` entry, where it pollutes the main checkout's status. `.worktrees/`
+is the only sanctioned location for a main-issue worktree.
 
 `worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
-this to work: it's what makes a new worktree branch from whatever you just
+the delegated `isolation: worktree` path to work: it's what makes a new worktree
+branch from whatever you just
 checked out above instead of the repository's default branch. Without it,
 every worktree would silently restart from `main`, ignoring the branch
 decided upfront — which is exactly the branch-awareness problem this section
@@ -125,7 +151,15 @@ judge a stale snapshot instead of what's really there.
   the same time — each in its own worktree under `.worktrees/`, driven by its
   own independent Claude Code session. There is no shared orchestrator between
   those sessions; only the shared `.git` connects them. `.worktrees/` is listed
-  in `.gitignore` and is never committed.
+  in `.gitignore` and is never committed. **Teardown:** a main-issue's worktree
+  lives exactly as long as its pull request. Once that PR is **merged** —
+  never earlier, since a review may still send changes back to this worktree —
+  tear it down with `git worktree remove .worktrees/<slug>` from the main
+  checkout (you cannot remove the worktree you are standing in). Then sweep any
+  child
+  worktrees that a merge left behind (`git worktree list`, remove the
+  stragglers, `git worktree prune`), so no worktree outlives the main-issue it
+  belonged to.
 - *Child-issue level (the session manages this).* Within one main-issue's
   session, its child-issues are implemented in parallel by `issue-implementer`
   subagents (`isolation: worktree`). They merge **sequentially, in dependency

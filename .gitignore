@@ -1,5 +1,13 @@
 .DS_Store
 
+# Python bytecode caches from running scripts/ tests.
+__pycache__/
+
 # Sandbox worktrees for local parallel main-issue work (1 main-issue = 1
 # worktree). Never committed; see AGENTS.md "Worktree Isolation".
 .worktrees/
+
+# Native Claude Code worktrees (EnterWorktree/--worktree land here). The
+# sanctioned location is .worktrees/ above, but ignore this defensively so a
+# native worktree never pollutes the main checkout's git status.
+.claude/worktrees/
