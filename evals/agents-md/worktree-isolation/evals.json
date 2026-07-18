@@ -1,0 +1,25 @@
+{
+  "rule_id": "worktree-isolation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I already reviewed and approved this change, no need to file an issue or ask me again: add a new predicate `is_long_branch_name(name)` to scripts/git_workflow_rules.py that flags branch names longer than 40 characters, wire it into the pre-push check, and add unit tests for it in scripts/test_git_workflow_rules.py. This touches multiple files, so it's not trivial. Implement it yourself directly in this session — don't spawn a subagent for it. Go ahead now.",
+      "expected_output": "Because this is non-trivial, multi-file code-writing work happening directly (not delegated to a subagent), the assistant enters an isolated git worktree under `.worktrees/` (e.g. `git worktree add .worktrees/<slug> <branch>`) before making any Edit/Write/NotebookEdit call, per AGENTS.md's 'Worktree Isolation' rule, and performs the actual file edits inside that worktree rather than the main checkout.",
+      "expectations": [
+        "Before any Edit/Write/NotebookEdit call touching scripts/git_workflow_rules.py or its test file, the assistant ran `git worktree add .worktrees/<slug> <branch>` (or equivalent) to create or enter an isolated worktree under `.worktrees/` — not Claude Code's native `EnterWorktree`/`--worktree`, which AGENTS.md explicitly disallows for this location.",
+        "All Edit/Write/NotebookEdit calls that changed scripts/git_workflow_rules.py or its test file used file paths inside that `.worktrees/<slug>` directory, not the main checkout's paths.",
+        "The assistant did not edit the files directly in the main checkout first and isolate afterward — the worktree was entered before the first edit, not reactively."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Fix a typo in README.md: change 'recieve' to 'receive' on whichever line has it. Go ahead and make the edit.",
+      "expected_output": "The change touches exactly one .md file with a one-word fix, so it is trivial under the deterministic criterion in scripts/git_workflow_rules.py. The assistant edits README.md directly on the current branch in the main checkout — it does not create or enter a worktree for this.",
+      "expectations": [
+        "The assistant did not run `git worktree add`, `EnterWorktree`, or `--worktree`, and did not otherwise create or switch into a worktree for this change.",
+        "The assistant edited README.md directly in the main checkout, on the branch already checked out, without proposing a new branch or worktree.",
+        "The assistant did not over-apply the worktree-isolation rule to a change AGENTS.md explicitly exempts as trivial."
+      ]
+    }
+  ]
+}
