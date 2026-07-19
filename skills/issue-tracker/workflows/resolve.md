@@ -12,13 +12,16 @@ verified — `resolved` means "implemented and passing".
    python3 <skill>/scripts/tracker.py comment "<issue-id>" "Implemented X; see <area>. Tests green."
    ```
 
-2. **If this issue is a main-issue, verify it first.** Check whether it has
-   child-issues:
-   ```bash
-   python3 <skill>/scripts/tracker.py list --parent "<issue-id>"
-   ```
-   Any results mean this is a main-issue, not a child-issue — its whole subtree
-   is now implemented, and that is exactly the point to run the `testing` skill
+2. **If this issue is a main-issue, verify it first.** An issue is a main-issue
+   when its id has no `/` — it sits directly under `docs/issues/` rather than
+   nested inside another issue. Do not test this by checking whether it has
+   child-issues: a main-issue whose specification collapsed into a single slice
+   (see decompose.md's "single slice: fold into the main-issue") has none of its
+   own, and skipping the four-axis check for it would be wrong — it is still the
+   main-issue, and still the one whose subtree gate opens the PR.
+
+   If it is a main-issue, its whole subtree (itself, plus any child-issues) is
+   now implemented, and that is exactly the point to run the `testing` skill
    (four-axis verification), once per main-issue, not per child-issue. It should
    already be `claimed` (see [implement.md](implement.md) — a main-issue is
    claimed the moment work starts on any of its child-issues). Pass the

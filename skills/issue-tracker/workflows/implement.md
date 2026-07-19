@@ -9,10 +9,14 @@ every child-issue — and then the main-issue itself — is `resolved`.
 
 Resolve `<skill>` below to the path of the `issue-tracker` skill's script.
 
-There are two ways to run this. **Prefer parallel dispatch** — it keeps the
-implementation out of the main conversation's context entirely. Fall back to the
-sequential loop when the `issue-implementer` subagent is unavailable, or when a
-single child-issue is all that is left.
+There are three ways to run this, depending on the main-issue's shape.
+**Prefer parallel dispatch (A)** when child-issues exist — it keeps the
+implementation out of the main conversation's context entirely. Fall back to
+the **sequential loop (B)** when the `issue-implementer` subagent is
+unavailable, or when a single child-issue is all that is left. When the
+main-issue has **no child-issues at all** — decompose.md folded a single slice
+directly into it — use **section C** instead: there is nothing for `next
+--parent` to find, since that only ever returns descendants.
 
 ---
 
@@ -182,6 +186,52 @@ If every child-issue shows `resolved`, follow [resolve.md](resolve.md) on the
 main-issue id — it was already claimed in step 1, so this runs `testing`,
 resolves it, and automatically pushes and opens the PR. Then give the user a
 brief summary of the changes made and the state of the git repository.
+
+---
+
+## C. Single-slice main-issue (no child-issues)
+
+Use this when [decompose.md](decompose.md) folded a single slice directly into
+the main-issue instead of creating a lone child-issue for it. The main-issue's
+own `## Acceptance Criteria` already holds that slice's plan, and the
+main-issue is already `ready-for-agent`. There is no child-issue layer here at
+all — work the main-issue id directly.
+
+### 1. Find and claim it
+
+Because it has no children, `next --parent <main-id>` would search only its
+(nonexistent) descendants and find nothing — do not use it. Either you already
+know the id from decompose.md's handoff, or an unscoped `next` (no `--parent`)
+will surface it once it is `ready-for-agent`, since a childless issue is a leaf
+like any other:
+
+```bash
+python3 <skill>/scripts/tracker.py set-status "<main-id>" claimed
+python3 <skill>/scripts/tracker.py show "<main-id>"
+```
+
+### 2. Implement
+
+Implement the main-issue's `## Acceptance Criteria` on its own branch
+`issue/<slug>`, in its own worktree (see AGENTS.md's Worktree Isolation rule —
+this is the main-issue-level worktree, not a throwaway child one). Follow the
+`engineering-principles` skill. Then run the project's test suite and verify it
+passes.
+
+Do not dispatch this to `issue-implementer`: that subagent's Verify step runs
+only the test suite, on the premise that the full four-axis check happens once
+at the main-issue level afterward (see resolve.md). A single-slice main-issue
+*is* that main-issue level — its resolution gate still needs the full
+`testing` skill, so implementing it as if it were an ordinary child-issue would
+skip that gate.
+
+### 3. Resolve
+
+Follow [resolve.md](resolve.md) on the main-issue id. Because the id has no
+`/`, resolve.md correctly identifies it as a main-issue (not by checking for
+children, which it has none of) and runs the full four-axis `testing` skill
+before resolving, pushing, and opening the PR — exactly as it would for a
+multi-slice main-issue once its whole subtree finishes.
 
 ---
 

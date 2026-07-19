@@ -41,5 +41,13 @@ and its pull request ready to open — only once its whole subtree is `resolved`
 - The decompose workflow creates child-issues directly at `ready-for-agent`,
   because they come from an already-specified main-issue, and advances the
   main-issue itself to `ready-for-agent` once it has been sliced.
-- `next` only ever returns `ready-for-agent` child-issues whose blockers are
-  `resolved`.
+- `next` returns any `ready-for-agent` **leaf** issue (a directory with no
+  children of its own) whose blockers are all `resolved`. For a normal,
+  multi-slice main-issue that leaf is always a child-issue. But when a
+  specification only ever yields a single slice, decompose.md folds it
+  directly into the main-issue instead of creating a lone child-issue for it
+  (see decompose.md, "single slice: fold into the main-issue") — that
+  main-issue then has no children, so it is itself the leaf `next` returns.
+  The main-issue/child-issue rule above still holds either way: with zero
+  children, "no child-issue is open" is vacuously true, so the main-issue
+  moves through `claimed` → `resolved` like any other leaf.
