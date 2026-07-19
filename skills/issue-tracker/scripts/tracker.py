@@ -573,6 +573,17 @@ def cmd_selftest(_args):
         cmd_set_status(SimpleNamespace(issue=main, status="resolved"))
         assert get_status(main) == "resolved"
 
+        # A main-issue whose spec collapsed into a single slice (decompose.md's
+        # "fold into the main-issue" case) has no child-issues at all. It must
+        # still be a leaf `next` can find and hand out directly, and it must
+        # still be resolvable — a childless subtree is vacuously fully resolved.
+        solo = create("Solo slice main", status="ready-for-agent", type="chore")
+        assert is_leaf(solo), "a childless main-issue is a leaf"
+        assert find_actionable("") == [solo], find_actionable("")
+        cmd_set_status(SimpleNamespace(issue=solo, status="claimed"))
+        cmd_set_status(SimpleNamespace(issue=solo, status="resolved"))
+        assert get_status(solo) == "resolved"
+
     del os.environ[ROOT_ENV_VAR]
     print("selftest: OK")
 
