@@ -59,7 +59,7 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 
 | Command | Purpose |
 | --- | --- |
-| `init [--agents-file FILE]` | Create `docs/issues/`, write `docs/agents/issue-tracker.md`, ensure `.scratch/` is git-ignored, and wire an `## Agent skills → Issue tracker` note into `AGENTS.md`/`CLAUDE.md` (idempotent). |
+| `init [--agents-file FILE]` | Create `docs/issues/`, write `docs/agents/issue-tracker.md` — renewing it, and saying so, whenever an existing copy has drifted from the current template — ensure `.scratch/` is git-ignored, and wire an `## Agent skills → Issue tracker` note into `AGENTS.md`/`CLAUDE.md` (idempotent). |
 | `create --title T --type {feature,fix,refactor,chore} [--parent ID] [--status S] [--blocked-by "N,N"]` | Create an issue. `--type` is required for a main-issue and inherited by a child-issue (`--parent`). Defaults to `needs-triage`. Prints the new issue id. |
 | `list [--parent ID] [--status S] [--tree]` | List issues, optionally scoped to a subtree or filtered by status. |
 | `show ID` | Print an issue's markdown. |
