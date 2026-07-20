@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: feature
 Blocked by: None
 
@@ -63,3 +63,4 @@ nie an. Das ist als Kind-Issue 02 erfasst.
 - [ ] Keine Verhaltensänderung an den bestehenden fünf Zuständen
 
 ## Comments
+- Vier-Achsen-Verifikation: Standards 9 Befunde (alle vorbestehend, keiner blockierend), Spezifikation ohne Befund, Tests gruen (42 Unittests + selftest), Dokumentation 2 Funde. Beide Docs-Funde behoben (AGENTS.md, PRD.md: PR-Gate nannte resolved statt geschlossen). Die vorbestehenden Standards-Befunde werden als eigenes Haupt-Issue erfasst.
