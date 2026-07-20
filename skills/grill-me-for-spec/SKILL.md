@@ -115,6 +115,20 @@ see the `issue-tracker` skill's `reference/issue-format.md`). Do not also leave 
 standalone `PRD.md` behind: the `## Description` is the one copy of the spec, so
 it cannot drift.
 
+If the new spec makes an **existing** issue redundant — the new main-issue
+subsumes it, or the grilling revealed it to be a duplicate — close that issue as
+`superseded` instead of leaving it open with a cross-reference comment. The
+reason is mandatory and is recorded as a comment on it:
+
+```bash
+python3 <issue-tracker-skill>/scripts/tracker.py set-status "<obsolete-id>" \
+  superseded --reason "Subsumed by <new-main-id>, which specifies the same behavior."
+```
+
+`superseded` is reachable from every open state (not from `resolved`) and counts
+as closed, so it no longer blocks its siblings. See the `issue-tracker` skill's
+`reference/states.md`.
+
 ## 7. Hand off & stop
 
 Tell the user the specification is complete and now lives in main-issue `<id>`

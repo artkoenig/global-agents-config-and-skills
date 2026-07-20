@@ -11,6 +11,28 @@
         "The created main-issue carries `Type: fix` — the change category the two-level model requires on a main-issue.",
         "The issue entered at status `needs-triage` (the triage inbox for a freshly reported bug), not directly `ready-for-agent`, `claimed`, or `resolved`."
       ]
+    },
+    {
+      "id": 2,
+      "prompt": "The two issues we just filed for the cache rewrite completely cover what the older issue `02-stale-cache-entries` asked for — it's redundant now. Please close it out, it shouldn't keep sitting in the backlog.",
+      "expected_output": "The redundant issue is closed as `superseded` via `tracker.py set-status ... superseded --reason \"...\"`, with a reason naming the issues that subsume it. It is NOT marked `resolved` (which would claim it was implemented) and NOT left open with only a cross-reference comment.",
+      "expectations": [
+        "The assistant closed the issue by running `tracker.py set-status` with the state `superseded` — not by hand-editing the issue.md's Status line.",
+        "The transition carried a `--reason` explaining why the issue is obsolete (that the new cache-rewrite issues subsume it), rather than being attempted without one.",
+        "The issue was NOT set to `resolved`: unimplemented work is not recorded as done.",
+        "The assistant did not settle for leaving the issue open with only a cross-reference comment as a workaround."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "In our tracker, child-issue `01-legacy-import` is `superseded` and `03-import-ui` is blocked by it. Can `03-import-ui` be worked on now, and can the main-issue be resolved once `03-import-ui` is done — or does the superseded one hold everything up?",
+      "expected_output": "The assistant answers that `superseded` counts as closed: the blocker is satisfied, so `03-import-ui` is actionable (verifiable with `tracker.py next --parent`), and a superseded child-issue does not prevent the main-issue from resolving.",
+      "expectations": [
+        "The assistant states that `superseded` counts as a closed state, alongside `resolved`.",
+        "It concludes that the `superseded` blocker releases `03-import-ui`, so that issue can be worked on — ideally backed by running `tracker.py next --parent <main-id>`.",
+        "It concludes that a `superseded` child-issue does not block its main-issue from reaching `resolved`.",
+        "It does not claim the superseded issue must first be reopened or resolved to unblock anything."
+      ]
     }
   ]
 }

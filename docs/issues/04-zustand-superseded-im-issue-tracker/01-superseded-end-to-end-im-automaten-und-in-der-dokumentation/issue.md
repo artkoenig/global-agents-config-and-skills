@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: feature
 Blocked by: None
 
@@ -64,3 +64,4 @@ Spezifikations-Skill sowie die Evals des Trackers.
 - [ ] Das Verhalten der bestehenden fünf Zustände ist unverändert
 
 ## Comments
+- Zustand superseded eingeführt: Übergangstabelle, Pflicht-Begründung via set-status --reason (als Kommentar festgehalten) und das benannte Prädikat is_closed/CLOSED_STATES als einzige Definition von 'geschlossen' für Blocker- und Kind-Issue-Prüfung. Selftest um Begründungspflicht, Erreichbarkeit, Rückweg, freigebenden Blocker und auflösbares Haupt-Issue erweitert; alle elf Dokumentoberflächen (inkl. TRACKER_DOC und evals.json) aktualisiert.

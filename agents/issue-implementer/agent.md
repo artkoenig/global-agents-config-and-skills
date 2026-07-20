@@ -60,6 +60,20 @@ If the issue turns out to be under-specified, or contradicts the codebase, **sto
 and report back** rather than guessing. An ambiguous issue is the caller's
 problem to resolve with the user — you cannot ask the user anything.
 
+If instead the issue turns out to need **no work at all** — its behavior already
+exists, or a sibling's merged work subsumes it — do not resolve it, which would
+record it as implemented. Close it as `superseded`, stating why:
+
+```bash
+python3 <tracker_script> set-status "<issue_id>" superseded \
+  --reason "Already covered by 02-cart-api; nothing left to build."
+```
+
+The reason is mandatory and is recorded as a comment. `superseded` counts as
+closed, so it releases whatever was blocked on this issue and does not hold up
+the main-issue. Then commit and report that outcome instead of step 3's test
+run. Never use it to escape a slice that is merely hard or failing.
+
 ### 3. Verify
 Run **only the test suite** for your slice — not the full four-axis `testing`
 skill. Delegate the run to the `test-runner` subagent from inside your worktree:

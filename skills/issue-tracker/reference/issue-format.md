@@ -26,16 +26,19 @@ specification (PRD).
 
 ## Header fields
 
-- **`Status:`** — one of the five states (see [states.md](states.md)). Managed
-  via `tracker.py set-status`.
+- **`Status:`** — one of the six states (see [states.md](states.md)). Managed
+  via `tracker.py set-status`. Moving an issue to `superseded` — closed without
+  ever being implemented — additionally requires `--reason`, which is recorded
+  under `## Comments`.
 - **`Type:`** — the change category, one of `feature | fix | refactor | chore`.
   Required on a main-issue: it replaces the old branch-name prefix now that
   `issue/<slug>` is the only branch pattern, and maps 1:1 to that branch. A
   child-issue inherits its main-issue's type unless `create --type` overrides it.
   Set at creation via `tracker.py create --type`.
 - **`Blocked by:`** — either `None` or a list of **sibling** numeric prefixes,
-  e.g. `[01, 03]`. A blocker is satisfied when that sibling reaches `resolved`.
-  Blockers only reference child-issues under the same main-issue.
+  e.g. `[01, 03]`. A blocker is satisfied when that sibling is closed — either
+  `resolved` or `superseded`, since a sibling that will never be built must not
+  block forever. Blockers only reference child-issues under the same main-issue.
 
 ## Addressing
 
