@@ -113,7 +113,20 @@ python3 <skill>/scripts/tracker.py set-status "<main-id>" ready-for-agent
 If it has child-issues, this is a status change on the main-issue only —
 `next --parent <main-id>` still returns just those child-issues, so their
 implementation is unaffected. The main-issue stays open until its whole subtree
-is `resolved` (enforced by the main-issue/child-issue rule).
+is closed — every child-issue `resolved`, or `superseded` if a slice turns out
+never to be needed (enforced by the main-issue/child-issue rule).
+
+If slicing this main-issue makes an **existing** issue redundant — the new
+slices subsume it, or it turns out to be a duplicate — close that issue as
+`superseded` rather than leaving it open with a cross-reference comment:
+
+```bash
+python3 <skill>/scripts/tracker.py set-status "<obsolete-id>" superseded \
+  --reason "Subsumed by <main-id>/02-cart-api, which covers the same behavior."
+```
+
+The reason is mandatory and is recorded as a comment on that issue. See
+[../reference/states.md](../reference/states.md).
 
 If Step 3a folded a single slice into it instead, it now has **no**
 child-issues, so it is itself a leaf: an unscoped `next` (run without

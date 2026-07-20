@@ -51,6 +51,23 @@ and merges the branches afterwards. The dispatcher must not claim the issues
 itself: a worktree branches from the integration branch and would never see an
 uncommitted claim. See `skills/issue-tracker/workflows/implement.md`.
 
+### Closing an issue that will never be built
+
+Besides the implementation lifecycle (`needs-triage` → `needs-info` →
+`ready-for-agent` → `claimed` → `resolved`) the tracker has a sixth state,
+`superseded`: an issue that another issue subsumes, that a merged PR made
+obsolete, or that is a duplicate. It is reachable from every open state but not
+from `resolved`, requires a `--reason` that is recorded as a comment, and counts
+as **closed** — it releases blocked siblings and does not hold up its
+main-issue:
+
+```bash
+python3 skills/issue-tracker/scripts/tracker.py set-status <id> superseded \
+  --reason "Subsumed by 03-cart-rewrite."
+```
+
+See `skills/issue-tracker/reference/states.md`.
+
 ## Using this in a cloud session
 
 The local symlinks into `~/.claude/skills/` and `~/.claude/agents/` don't exist

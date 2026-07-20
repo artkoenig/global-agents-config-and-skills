@@ -28,18 +28,36 @@ DEFAULT_ROOT = os.path.join("docs", "issues")
 ISSUE_FILE = "issue.md"
 ROOT_ENV_VAR = "ISSUE_TRACKER_DIR"
 
-# The five issue states and the transitions allowed between them. Making the
+# The six issue states and the transitions allowed between them. Making the
 # state machine explicit prevents inconsistent lifecycles — e.g. jumping from
 # needs-triage straight to resolved without the work in between.
-STATES = ["needs-triage", "needs-info", "ready-for-agent", "claimed", "resolved"]
+STATES = [
+    "needs-triage",
+    "needs-info",
+    "ready-for-agent",
+    "claimed",
+    "resolved",
+    "superseded",
+]
 TRANSITIONS = {
-    "needs-triage": {"needs-info", "ready-for-agent"},
-    "needs-info": {"ready-for-agent", "needs-triage"},
-    "ready-for-agent": {"claimed", "needs-info"},
-    "claimed": {"resolved", "ready-for-agent"},
-    "resolved": {"ready-for-agent"},  # reopen
+    "needs-triage": {"needs-info", "ready-for-agent", "superseded"},
+    "needs-info": {"ready-for-agent", "needs-triage", "superseded"},
+    "ready-for-agent": {"claimed", "needs-info", "superseded"},
+    "claimed": {"resolved", "ready-for-agent", "superseded"},
+    "resolved": {"ready-for-agent"},  # reopen; never superseded — done stays done
+    "superseded": {"needs-triage"},  # reopen
 }
 DEFAULT_STATUS = "needs-triage"
+
+# The states in which an issue is closed: no further work will happen on it.
+# This is the single definition of "closed" — a closed blocker releases what it
+# blocks, and a closed child-issue no longer holds up its main-issue. A future
+# terminal state joins this set instead of spawning new string comparisons.
+CLOSED_STATES = frozenset({"resolved", "superseded"})
+
+# States whose transition demands a written justification, recorded as a comment
+# on the issue. Without it an issue would drop off the board silently.
+REASON_REQUIRED_STATES = frozenset({"superseded"})
 
 # The change category a main-issue carries in its ``Type:`` field. It replaces
 # the old branch-name prefix (feature|fix|refactor|chore) now that the only
@@ -100,24 +118,43 @@ Work for this repository is tracked as local markdown issues in two levels.
 - `ready-for-agent` — fully specified, ready for autonomous implementation (AFK)
 - `claimed` — in progress by the agent
 - `resolved` — implemented and done
+- `superseded` — closed without being implemented: replaced by another issue,
+  made obsolete, or a duplicate. Which of those it was is stated in the
+  mandatory reason, not in the state name.
 
 Allowed transitions:
-- `needs-triage` -> `needs-info`, `ready-for-agent`
-- `needs-info` -> `ready-for-agent`, `needs-triage`
-- `ready-for-agent` -> `claimed`, `needs-info`
-- `claimed` -> `resolved`, `ready-for-agent`
+- `needs-triage` -> `needs-info`, `ready-for-agent`, `superseded`
+- `needs-info` -> `ready-for-agent`, `needs-triage`, `superseded`
+- `ready-for-agent` -> `claimed`, `needs-info`, `superseded`
+- `claimed` -> `resolved`, `ready-for-agent`, `superseded`
 - `resolved` -> `ready-for-agent` (reopen)
+- `superseded` -> `needs-triage` (reopen)
 
-A main-issue cannot become `resolved` while any child-issue is still open, so it
-is "done" — and its PR ready to open — only once its whole subtree is.
+`superseded` is reachable from every open state — work in progress can become
+obsolete too — but never from `resolved`: finished work is not undone after the
+fact. The transition requires a reason and is rejected without one:
+
+```bash
+tracker.py set-status <id> superseded --reason "Subsumed by 03-cart-rewrite."
+```
+
+The reason is recorded as a comment on the issue.
+
+`resolved` and `superseded` both count as **closed**. A main-issue cannot become
+`resolved` while any child-issue is still open, so it is "done" — and its PR
+ready to open — only once its whole subtree is closed; a `superseded`
+child-issue does not hold it up. Likewise a `superseded` blocker releases the
+issues it blocks — otherwise an issue that will never be implemented would block
+its neighbours forever.
 
 ## Implementing a main-issue
 Every child-issue is implemented on the main-issue's one branch `issue/<slug>`;
-the pull request is opened only once every child-issue is `resolved`.
+the pull request is opened only once every child-issue is closed (`resolved`, or
+`superseded` for a slice that turned out not to be needed).
 
 Work the child-issues one at a time. For each:
 1. Pick the next actionable child with `tracker.py next --parent <main-id>`. It
-   returns the next `ready-for-agent` child whose blockers are all `resolved`.
+   returns the next `ready-for-agent` child whose blockers are all closed.
    If nothing is returned, there is no ready work.
 2. Claim it: `tracker.py set-status <id> claimed`, and read it with
    `tracker.py show <id>`.
@@ -290,10 +327,19 @@ def sibling_by_number(issue_id, num):
     return None
 
 
+def is_closed(status):
+    """Whether a status means the issue will see no further work.
+
+    Both `resolved` (implemented) and `superseded` (never will be) close an
+    issue. Everything that asks "is this issue still open?" asks it here.
+    """
+    return status in CLOSED_STATES
+
+
 def is_unblocked(issue_id):
     for num in get_blockers(issue_id):
         sib = sibling_by_number(issue_id, num)
-        if not sib or get_status(sib) != "resolved":
+        if not sib or not is_closed(get_status(sib)):
             return False
     return True
 
@@ -379,32 +425,46 @@ def cmd_set_status(args):
         allowed = ", ".join(sorted(TRANSITIONS.get(current, set()))) or "none"
         fail(f"Invalid transition {current} -> {new}. Allowed from {current}: {allowed}")
 
+    reason = (getattr(args, "reason", None) or "").strip()
+    if new in REASON_REQUIRED_STATES and not reason:
+        fail(f"A transition to '{new}' requires a reason. Pass it with "
+             f'--reason "why this issue is closed without being implemented"; '
+             f"it is recorded as a comment on the issue.")
+
     if new == "resolved":
-        open_children = [c for c in child_ids(issue_id) if get_status(c) != "resolved"]
+        open_children = [c for c in child_ids(issue_id)
+                         if not is_closed(get_status(c))]
         if open_children:
             fail(f"Cannot resolve '{issue_id}' while child issues are open: "
                  f"{', '.join(open_children)}")
 
     set_field(issue_id, "Status", new)
+    if reason:
+        append_comment(issue_id, f"{new}: {reason}")
     print(f"{issue_id}: {current} -> {new}")
+
+
+def append_comment(issue_id, text):
+    """Append one bullet under the issue's `## Comments`, creating it if absent."""
+    with open(issue_file(issue_id)) as f:
+        content = f.read()
+    if "## Comments" not in content:
+        content = content.rstrip() + "\n\n## Comments\n"
+    content = content.rstrip() + f"\n- {text}\n"
+    with open(issue_file(issue_id), "w") as f:
+        f.write(content)
 
 
 def cmd_comment(args):
     issue_id = normalize_id(args.issue)
     if not exists(issue_id):
         fail(f"Issue not found: {issue_id}")
-    with open(issue_file(issue_id)) as f:
-        content = f.read()
-    if "## Comments" not in content:
-        content = content.rstrip() + "\n\n## Comments\n"
-    content = content.rstrip() + f"\n- {args.text}\n"
-    with open(issue_file(issue_id), "w") as f:
-        f.write(content)
+    append_comment(issue_id, args.text)
     print(f"Comment added to {issue_id}")
 
 
 def find_actionable(start, limit=None):
-    """Return the `ready-for-agent` child-issues (leaves) with blockers resolved.
+    """Return the `ready-for-agent` child-issues (leaves) whose blockers are closed.
 
     Every issue in the result is independent of every other one: an issue that a
     sibling still blocks is excluded by `is_unblocked`. The full result is
@@ -434,13 +494,54 @@ def cmd_next(args):
 # init: scaffold structure and wire the tracker into AGENTS.md / CLAUDE.md
 # --------------------------------------------------------------------------- #
 
+TRACKER_DOC_PATH = os.path.join("docs", "agents", "issue-tracker.md")
+
+DOC_RENEWAL_NOTICE = ("Renewed {path} from the current template "
+                      "(this file is generated; local edits to it are replaced).")
+
+DOC_CREATED = "created"
+DOC_RENEWED = "renewed"
+DOC_UNCHANGED = "unchanged"
+
+
 def _write_if_absent(path, content):
+    """Seed a file the project owns from then on, and never touch it again.
+
+    Used for files the tracker merely bootstraps (the `.gitkeep` placeholder):
+    once they exist, whatever the project made of them wins.
+    """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     if not os.path.exists(path):
         with open(path, "w") as f:
             f.write(content)
         return True
     return False
+
+
+def _refresh_generated_doc(path, template):
+    """Keep a wholly tracker-generated document in sync with its template.
+
+    Unlike `_write_if_absent`, this replaces an existing file. That is only
+    defensible for this one document because it is generated in full and
+    offers no section for project-local edits: it *is* the description of the
+    state machine the engine enforces, so a stale copy would silently instruct
+    agents by an obsolete model. Renewal is reported by the caller precisely
+    because an edit made here regardless must not vanish unnoticed.
+
+    Returns `DOC_CREATED`, `DOC_RENEWED` or `DOC_UNCHANGED`; an unchanged file
+    is not rewritten, which keeps repeated `init` runs silent and idempotent.
+    """
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    if os.path.exists(path):
+        with open(path) as f:
+            if f.read() == template:
+                return DOC_UNCHANGED
+        outcome = DOC_RENEWED
+    else:
+        outcome = DOC_CREATED
+    with open(path, "w") as f:
+        f.write(template)
+    return outcome
 
 
 def _ensure_gitignore_scratch():
@@ -485,17 +586,72 @@ def cmd_init(args):
     root = get_root()
     os.makedirs(root, exist_ok=True)
     _write_if_absent(os.path.join(root, ".gitkeep"), "")
-    _write_if_absent(os.path.join("docs", "agents", "issue-tracker.md"), TRACKER_DOC)
+    doc_outcome = _refresh_generated_doc(TRACKER_DOC_PATH, TRACKER_DOC)
     _ensure_gitignore_scratch()
     target = _pick_agents_file(args.agents_file)
     wired = _wire_agents_file(target)
     note = "added" if wired else "already present"
     print(f"Issue tracker initialized at {root}/. Agent note in {target} ({note}).")
+    if doc_outcome == DOC_RENEWED:
+        print(DOC_RENEWAL_NOTICE.format(path=TRACKER_DOC_PATH))
 
 
 # --------------------------------------------------------------------------- #
 # selftest
 # --------------------------------------------------------------------------- #
+
+def _selftest_init_renews_tracker_doc(capture):
+    """`init` keeps its generated documentation current, and stays idempotent.
+
+    Runs in a throwaway project directory, because `init` writes relative to
+    the working directory.
+    """
+    import tempfile
+
+    renewal_notice = DOC_RENEWAL_NOTICE.format(path=TRACKER_DOC_PATH)
+    outer_root = os.environ[ROOT_ENV_VAR]
+    previous_cwd = os.getcwd()
+
+    def read(path):
+        with open(path) as f:
+            return f.read()
+
+    def write(path, content):
+        with open(path, "w") as f:
+            f.write(content)
+
+    with tempfile.TemporaryDirectory() as project:
+        os.chdir(project)
+        os.environ[ROOT_ENV_VAR] = os.path.join("docs", "issues")
+        try:
+            first_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC
+            assert renewal_notice not in first_run, "creation is not a renewal"
+
+            write(TRACKER_DOC_PATH, "documentation of an outdated state model\n")
+            placeholder = os.path.join(get_root(), ".gitkeep")
+            local_placeholder_content = "kept by the project\n"
+            write(placeholder, local_placeholder_content)
+
+            renewing_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC, "drifted doc not renewed"
+            assert renewal_notice in renewing_run, renewing_run
+            assert read(placeholder) == local_placeholder_content, \
+                "files other than the generated doc keep their previous behaviour"
+
+            # A distinctly old timestamp proves the matching file is not
+            # rewritten at all, rather than rewritten with identical bytes.
+            untouched_since = 1_000_000_000
+            os.utime(TRACKER_DOC_PATH, (untouched_since, untouched_since))
+            repeated_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC
+            assert os.path.getmtime(TRACKER_DOC_PATH) == untouched_since, \
+                "a matching doc must not be written again"
+            assert renewal_notice not in repeated_run, "re-run must stay silent"
+        finally:
+            os.chdir(previous_cwd)
+            os.environ[ROOT_ENV_VAR] = outer_root
+
 
 def cmd_selftest(_args):
     import tempfile
@@ -504,15 +660,25 @@ def cmd_selftest(_args):
     with tempfile.TemporaryDirectory() as tmp:
         os.environ[ROOT_ENV_VAR] = os.path.join(tmp, "docs", "issues")
 
-        def create(title, parent=None, status=None, blocked_by=None, type=None):
+        def capture(command, **arguments):
             import io
             from contextlib import redirect_stdout
             buf = io.StringIO()
             with redirect_stdout(buf):
-                cmd_create(SimpleNamespace(title=title, parent=parent,
-                                           status=status, blocked_by=blocked_by,
-                                           type=type))
+                command(SimpleNamespace(**arguments))
             return buf.getvalue().strip()
+
+        def create(title, parent=None, status=None, blocked_by=None, type=None):
+            return capture(cmd_create, title=title, parent=parent, status=status,
+                           blocked_by=blocked_by, type=type)
+
+        def set_status(issue, status, reason=None):
+            cmd_set_status(SimpleNamespace(issue=issue, status=status,
+                                           reason=reason))
+
+        def comments_of(issue_id):
+            with open(issue_file(issue_id)) as f:
+                return f.read().split("## Comments", 1)[1]
 
         # A main-issue must declare a type (it maps 1:1 to a branch).
         try:
@@ -548,29 +714,29 @@ def cmd_selftest(_args):
 
         # Enforced transitions: needs-triage -> resolved is illegal.
         try:
-            cmd_set_status(SimpleNamespace(issue=bug, status="resolved"))
+            set_status(bug, "resolved")
             raise AssertionError("illegal transition was allowed")
         except SystemExit:
             pass
 
         # A main-issue cannot resolve while a child-issue is open.
-        cmd_set_status(SimpleNamespace(issue=a, status="claimed"))
-        cmd_set_status(SimpleNamespace(issue=a, status="resolved"))
+        set_status(a, "claimed")
+        set_status(a, "resolved")
         assert is_unblocked(b)  # blocker a now resolved
-        cmd_set_status(SimpleNamespace(issue=main, status="claimed"))
+        set_status(main, "claimed")
         try:
-            cmd_set_status(SimpleNamespace(issue=main, status="resolved"))
+            set_status(main, "resolved")
             raise AssertionError("resolved main-issue with open child")
         except SystemExit:
             pass
 
         # Resolve the remaining children, then the main-issue can resolve.
-        cmd_set_status(SimpleNamespace(issue=b, status="claimed"))
-        cmd_set_status(SimpleNamespace(issue=b, status="resolved"))
-        cmd_set_status(SimpleNamespace(issue=override, status="ready-for-agent"))
-        cmd_set_status(SimpleNamespace(issue=override, status="claimed"))
-        cmd_set_status(SimpleNamespace(issue=override, status="resolved"))
-        cmd_set_status(SimpleNamespace(issue=main, status="resolved"))
+        set_status(b, "claimed")
+        set_status(b, "resolved")
+        set_status(override, "ready-for-agent")
+        set_status(override, "claimed")
+        set_status(override, "resolved")
+        set_status(main, "resolved")
         assert get_status(main) == "resolved"
 
         # A main-issue whose spec collapsed into a single slice (decompose.md's
@@ -580,9 +746,58 @@ def cmd_selftest(_args):
         solo = create("Solo slice main", status="ready-for-agent", type="chore")
         assert is_leaf(solo), "a childless main-issue is a leaf"
         assert find_actionable("") == [solo], find_actionable("")
-        cmd_set_status(SimpleNamespace(issue=solo, status="claimed"))
-        cmd_set_status(SimpleNamespace(issue=solo, status="resolved"))
+        set_status(solo, "claimed")
+        set_status(solo, "resolved")
         assert get_status(solo) == "resolved"
+
+        # --- superseded: closing an issue that will never be implemented ---
+
+        # The transition demands a reason, and is rejected without one.
+        obsolete = create("Obsolete idea", type="feature")  # needs-triage
+        try:
+            set_status(obsolete, "superseded")
+            raise AssertionError("superseded without a reason was allowed")
+        except SystemExit:
+            pass
+        assert get_status(obsolete) == "needs-triage"
+
+        # With a reason it goes through, and the reason lands in the comments.
+        set_status(obsolete, "superseded", reason="Subsumed by 05-cart-rewrite.")
+        assert get_status(obsolete) == "superseded"
+        assert "Subsumed by 05-cart-rewrite." in comments_of(obsolete)
+
+        # Reachable from every open state, including work in progress...
+        for open_state in ("needs-triage", "needs-info", "ready-for-agent",
+                           "claimed"):
+            assert "superseded" in TRANSITIONS[open_state], open_state
+        # ...but never from resolved: finished work is not undone afterwards.
+        assert "superseded" not in TRANSITIONS["resolved"]
+
+        # The way back out is needs-triage — an issue can turn out to be needed.
+        set_status(obsolete, "needs-triage")
+        assert get_status(obsolete) == "needs-triage"
+
+        # A superseded blocker releases what it blocks: otherwise an issue that
+        # will never be implemented would block its siblings forever.
+        dropped_main = create("Dropped slice main", status="ready-for-agent",
+                              type="feature")
+        dropped = create("Dropped slice", parent=dropped_main,
+                         status="ready-for-agent")
+        dependent = create("Depends on dropped", parent=dropped_main,
+                           status="ready-for-agent", blocked_by="1")
+        assert not is_unblocked(dependent)
+        set_status(dropped, "superseded", reason="Requirement was withdrawn.")
+        assert is_unblocked(dependent), "superseded blocker must release"
+        assert find_actionable(dropped_main) == [dependent]
+
+        # A superseded child-issue does not hold up its main-issue's resolution.
+        set_status(dependent, "claimed")
+        set_status(dependent, "resolved")
+        set_status(dropped_main, "claimed")
+        set_status(dropped_main, "resolved")
+        assert get_status(dropped_main) == "resolved"
+
+        _selftest_init_renews_tracker_doc(capture)
 
     del os.environ[ROOT_ENV_VAR]
     print("selftest: OK")
@@ -623,6 +838,10 @@ def build_parser():
     p_status = sub.add_parser("set-status", help="Change status (enforced transitions).")
     p_status.add_argument("issue")
     p_status.add_argument("status")
+    p_status.add_argument("--reason",
+                          help="Justification for the transition, recorded as a "
+                               "comment. Required for: "
+                               f"{', '.join(sorted(REASON_REQUIRED_STATES))}.")
     p_status.set_defaults(func=cmd_set_status)
 
     p_comment = sub.add_parser("comment", help="Append a comment.")

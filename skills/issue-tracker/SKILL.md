@@ -1,6 +1,6 @@
 ---
 name: issue-tracker
-description: Local, file-based issue tracker for a project, organised in two levels. A top-level main-issue — a directory under docs/issues/ with an issue.md holding the spec — maps 1:1 to one branch issue/<slug>, one worktree and one pull request; its nested child-issues are the vertical slices of that one PR. Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved), to find and implement the next child-issue ready for work (claim → implement → resolve), to break a specification down into child-issues, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", "implement the next issue", working through tickets, breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
+description: Local, file-based issue tracker for a project, organised in two levels. A top-level main-issue — a directory under docs/issues/ with an issue.md holding the spec — maps 1:1 to one branch issue/<slug>, one worktree and one pull request; its nested child-issues are the vertical slices of that one PR. Use this skill to initialize the tracker in a project (init), to create/list/show issues, to move an issue through its lifecycle (needs-triage → needs-info → ready-for-agent → claimed → resolved, or superseded for an issue that will never be implemented), to find and implement the next child-issue ready for work (claim → implement → resolve), to break a specification down into child-issues, to close an issue as superseded/obsolete/duplicate, or to mark work resolved. Trigger it whenever the user talks about issues, tickets, tracking work, triage, backlog, "what should I work on next", "implement the next issue", working through tickets, breaking a spec/PRD into tasks, or setting up issue tracking for a repo — even if they don't name the tracker explicitly.
 user-invocable: true
 ---
 
@@ -59,13 +59,13 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 
 | Command | Purpose |
 | --- | --- |
-| `init [--agents-file FILE]` | Create `docs/issues/`, write `docs/agents/issue-tracker.md`, ensure `.scratch/` is git-ignored, and wire an `## Agent skills → Issue tracker` note into `AGENTS.md`/`CLAUDE.md` (idempotent). |
+| `init [--agents-file FILE]` | Create `docs/issues/`, write `docs/agents/issue-tracker.md` — renewing it, and saying so, whenever an existing copy has drifted from the current template — ensure `.scratch/` is git-ignored, and wire an `## Agent skills → Issue tracker` note into `AGENTS.md`/`CLAUDE.md` (idempotent). |
 | `create --title T --type {feature,fix,refactor,chore} [--parent ID] [--status S] [--blocked-by "N,N"]` | Create an issue. `--type` is required for a main-issue and inherited by a child-issue (`--parent`). Defaults to `needs-triage`. Prints the new issue id. |
 | `list [--parent ID] [--status S] [--tree]` | List issues, optionally scoped to a subtree or filtered by status. |
 | `show ID` | Print an issue's markdown. |
-| `set-status ID STATE` | Move an issue to a new state. Invalid transitions and resolving a parent with open children are rejected. |
+| `set-status ID STATE [--reason "why"]` | Move an issue to a new state. Invalid transitions and resolving a parent with open children are rejected. `--reason` is required for `superseded` and is recorded as a comment. |
 | `comment ID "text"` | Append a note under `## Comments`. |
-| `next [--parent ID] [--all]` | Print the next actionable **child-issue** (a leaf): `ready-for-agent`, all sibling blockers `resolved`. Scope to one main-issue with `--parent`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
+| `next [--parent ID] [--all]` | Print the next actionable **child-issue** (a leaf): `ready-for-agent`, all sibling blockers closed. Scope to one main-issue with `--parent`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
 | `selftest` | Run the engine's built-in tests. |
 
 ## When to use which workflow
@@ -109,6 +109,16 @@ python3 <skill>/scripts/tracker.py set-status "$ID" resolved
 ```bash
 python3 <skill>/scripts/tracker.py next --all
 ```
+
+**Close an issue that will never be implemented** (replaced, obsolete, duplicate)
+```bash
+python3 <skill>/scripts/tracker.py set-status "$ID" superseded \
+  --reason "Subsumed by 03-cart-rewrite, which covers the same behavior."
+```
+`superseded` is reachable from every open state but not from `resolved`, the
+reason is mandatory and recorded as a comment, and the state counts as closed —
+it releases blocked siblings and does not hold up its main-issue. See
+[reference/states.md](reference/states.md).
 
 ## Relationship to other skills
 

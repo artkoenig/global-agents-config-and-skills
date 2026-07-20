@@ -60,7 +60,8 @@ old `feature|fix|refactor|chore` prefixes are gone; that category now lives in a
 
 The relationship is strict: **1 main-issue = 1 branch `issue/<slug>` = 1
 worktree = 1 pull request.** The PR is opened only once every child-issue of the
-main-issue is resolved. `main` is never pushed to locally — it advances only
+main-issue is closed — `resolved`, or `superseded` for one that will never be
+implemented. `main` is never pushed to locally — it advances only
 through a GitHub PR merge, and the hook rejects any push whose target ref is
 `main`.
 

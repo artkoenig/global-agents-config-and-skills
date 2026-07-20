@@ -5,7 +5,21 @@ child-issues that make up its one branch `issue/<slug>`, one worktree and one
 pull request. Each child-issue's lifecycle runs
 `ready-for-agent → claimed → resolved`; the tracker enforces the transitions, so
 all state changes go through `tracker.py`. The pull request is opened only once
-every child-issue — and then the main-issue itself — is `resolved`.
+every child-issue is closed and the main-issue itself is `resolved`.
+
+A child-issue that turns out never to be needed — its work is already covered
+elsewhere, or the requirement fell away mid-implementation — is not left hanging
+and not faked as implemented. Close it as `superseded` with a mandatory reason:
+
+```bash
+python3 <skill>/scripts/tracker.py set-status "<child-id>" superseded \
+  --reason "Already covered by 02-cart-api; nothing left to build here."
+```
+
+`superseded` counts as closed: it releases the siblings that were blocked on it
+and does not hold up the main-issue's resolution. It is reachable from every
+open state, including `claimed`. Use it only for work that will genuinely never
+be done — never to make a failing slice go away.
 
 Resolve `<skill>` below to the path of the `issue-tracker` skill's script.
 
@@ -126,7 +140,8 @@ finished **main-issue** automatically — check it yourself:
 python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
 
-If every child-issue now shows `resolved`, follow [resolve.md](resolve.md) on the
+If every child-issue is now closed (`resolved`, or `superseded` for a slice that
+turned out not to be needed), follow [resolve.md](resolve.md) on the
 **main-issue id** — it was already claimed in step 4, so this runs `testing`,
 resolves it, then automatically pushes and opens the PR (resolve.md step 5).
 That PR is opened only once the main-issue is `resolved` — one PR for the whole
@@ -182,7 +197,8 @@ whether the main-issue is now fully resolved:
 ```bash
 python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 ```
-If every child-issue shows `resolved`, follow [resolve.md](resolve.md) on the
+If every child-issue is now closed (`resolved` or `superseded`), follow
+[resolve.md](resolve.md) on the
 main-issue id — it was already claimed in step 1, so this runs `testing`,
 resolves it, and automatically pushes and opens the PR. Then give the user a
 brief summary of the changes made and the state of the git repository.
