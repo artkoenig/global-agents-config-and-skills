@@ -4,6 +4,22 @@ Use this workflow to close out a single issue once it has been fully implemented
 and all its tests pass. Do not use it before the work is actually done and
 verified — `resolved` means "implemented and passing".
 
+**If the issue will never be implemented, this is the wrong workflow.** An issue
+that another issue subsumes, that a merged pull request made obsolete, whose
+requirement was dropped, or that is a duplicate is closed as `superseded`
+instead — a single command, with a mandatory reason recorded as a comment:
+
+```bash
+python3 <skill>/scripts/tracker.py set-status "<issue-id>" superseded \
+  --reason "Subsumed by 03-cart-rewrite, which covers the same behavior."
+```
+
+That state is reachable from every open state (including `claimed`) but not from
+`resolved`, and it counts as closed: it releases blocked siblings and does not
+hold up its main-issue's resolution. Never route unbuilt work through `resolved`
+to get it off the board — that would record it as implemented. See
+[../reference/states.md](../reference/states.md).
+
 ## Steps
 
 1. **Record the outcome.** Append a short summary of the solution to the issue's
@@ -43,8 +59,9 @@ verified — `resolved` means "implemented and passing".
    python3 <skill>/scripts/tracker.py set-status "<issue-id>" resolved
    ```
    The tracker rejects this if the issue is a main-issue with open child-issues —
-   resolve the child-issues first. A main-issue therefore becomes `resolved` only
-   when its whole subtree is done **and**, per step 2, has passed verification.
+   close the child-issues first, each either `resolved` or `superseded`. A
+   main-issue therefore becomes `resolved` only when its whole subtree is closed
+   **and**, per step 2, has passed verification.
    Resolving the main-issue is the gate for opening its pull request — one PR for
    the whole main-issue, opened automatically in step 5.
 
