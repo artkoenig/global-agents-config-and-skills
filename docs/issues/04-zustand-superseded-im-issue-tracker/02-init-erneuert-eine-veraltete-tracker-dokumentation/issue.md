@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: feature
 Blocked by: None
 
@@ -45,3 +45,4 @@ darf nichts schreiben und nichts melden.
 Unabhängig von Kind-Issue 01 sinnvoll — der Befund besteht auch ohne den neuen
 Zustand. Er wird gemeinsam bearbeitet, weil ohne ihn die Erweiterung aus 01
 bestehende Repositories nicht erreicht.
+- init erneuert docs/agents/issue-tracker.md, sobald sie von der Vorlage abweicht, und meldet die Erneuerung; eine uebereinstimmende Datei wird nicht angefasst. Die uebrigen von init angelegten Dateien behalten ihr Verhalten (_write_if_absent).

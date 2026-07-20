@@ -494,13 +494,54 @@ def cmd_next(args):
 # init: scaffold structure and wire the tracker into AGENTS.md / CLAUDE.md
 # --------------------------------------------------------------------------- #
 
+TRACKER_DOC_PATH = os.path.join("docs", "agents", "issue-tracker.md")
+
+DOC_RENEWAL_NOTICE = ("Renewed {path} from the current template "
+                      "(this file is generated; local edits to it are replaced).")
+
+DOC_CREATED = "created"
+DOC_RENEWED = "renewed"
+DOC_UNCHANGED = "unchanged"
+
+
 def _write_if_absent(path, content):
+    """Seed a file the project owns from then on, and never touch it again.
+
+    Used for files the tracker merely bootstraps (the `.gitkeep` placeholder):
+    once they exist, whatever the project made of them wins.
+    """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     if not os.path.exists(path):
         with open(path, "w") as f:
             f.write(content)
         return True
     return False
+
+
+def _refresh_generated_doc(path, template):
+    """Keep a wholly tracker-generated document in sync with its template.
+
+    Unlike `_write_if_absent`, this replaces an existing file. That is only
+    defensible for this one document because it is generated in full and
+    offers no section for project-local edits: it *is* the description of the
+    state machine the engine enforces, so a stale copy would silently instruct
+    agents by an obsolete model. Renewal is reported by the caller precisely
+    because an edit made here regardless must not vanish unnoticed.
+
+    Returns `DOC_CREATED`, `DOC_RENEWED` or `DOC_UNCHANGED`; an unchanged file
+    is not rewritten, which keeps repeated `init` runs silent and idempotent.
+    """
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    if os.path.exists(path):
+        with open(path) as f:
+            if f.read() == template:
+                return DOC_UNCHANGED
+        outcome = DOC_RENEWED
+    else:
+        outcome = DOC_CREATED
+    with open(path, "w") as f:
+        f.write(template)
+    return outcome
 
 
 def _ensure_gitignore_scratch():
@@ -545,17 +586,72 @@ def cmd_init(args):
     root = get_root()
     os.makedirs(root, exist_ok=True)
     _write_if_absent(os.path.join(root, ".gitkeep"), "")
-    _write_if_absent(os.path.join("docs", "agents", "issue-tracker.md"), TRACKER_DOC)
+    doc_outcome = _refresh_generated_doc(TRACKER_DOC_PATH, TRACKER_DOC)
     _ensure_gitignore_scratch()
     target = _pick_agents_file(args.agents_file)
     wired = _wire_agents_file(target)
     note = "added" if wired else "already present"
     print(f"Issue tracker initialized at {root}/. Agent note in {target} ({note}).")
+    if doc_outcome == DOC_RENEWED:
+        print(DOC_RENEWAL_NOTICE.format(path=TRACKER_DOC_PATH))
 
 
 # --------------------------------------------------------------------------- #
 # selftest
 # --------------------------------------------------------------------------- #
+
+def _selftest_init_renews_tracker_doc(capture):
+    """`init` keeps its generated documentation current, and stays idempotent.
+
+    Runs in a throwaway project directory, because `init` writes relative to
+    the working directory.
+    """
+    import tempfile
+
+    renewal_notice = DOC_RENEWAL_NOTICE.format(path=TRACKER_DOC_PATH)
+    outer_root = os.environ[ROOT_ENV_VAR]
+    previous_cwd = os.getcwd()
+
+    def read(path):
+        with open(path) as f:
+            return f.read()
+
+    def write(path, content):
+        with open(path, "w") as f:
+            f.write(content)
+
+    with tempfile.TemporaryDirectory() as project:
+        os.chdir(project)
+        os.environ[ROOT_ENV_VAR] = os.path.join("docs", "issues")
+        try:
+            first_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC
+            assert renewal_notice not in first_run, "creation is not a renewal"
+
+            write(TRACKER_DOC_PATH, "documentation of an outdated state model\n")
+            placeholder = os.path.join(get_root(), ".gitkeep")
+            local_placeholder_content = "kept by the project\n"
+            write(placeholder, local_placeholder_content)
+
+            renewing_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC, "drifted doc not renewed"
+            assert renewal_notice in renewing_run, renewing_run
+            assert read(placeholder) == local_placeholder_content, \
+                "files other than the generated doc keep their previous behaviour"
+
+            # A distinctly old timestamp proves the matching file is not
+            # rewritten at all, rather than rewritten with identical bytes.
+            untouched_since = 1_000_000_000
+            os.utime(TRACKER_DOC_PATH, (untouched_since, untouched_since))
+            repeated_run = capture(cmd_init, agents_file=None)
+            assert read(TRACKER_DOC_PATH) == TRACKER_DOC
+            assert os.path.getmtime(TRACKER_DOC_PATH) == untouched_since, \
+                "a matching doc must not be written again"
+            assert renewal_notice not in repeated_run, "re-run must stay silent"
+        finally:
+            os.chdir(previous_cwd)
+            os.environ[ROOT_ENV_VAR] = outer_root
+
 
 def cmd_selftest(_args):
     import tempfile
@@ -564,15 +660,17 @@ def cmd_selftest(_args):
     with tempfile.TemporaryDirectory() as tmp:
         os.environ[ROOT_ENV_VAR] = os.path.join(tmp, "docs", "issues")
 
-        def create(title, parent=None, status=None, blocked_by=None, type=None):
+        def capture(command, **arguments):
             import io
             from contextlib import redirect_stdout
             buf = io.StringIO()
             with redirect_stdout(buf):
-                cmd_create(SimpleNamespace(title=title, parent=parent,
-                                           status=status, blocked_by=blocked_by,
-                                           type=type))
+                command(SimpleNamespace(**arguments))
             return buf.getvalue().strip()
+
+        def create(title, parent=None, status=None, blocked_by=None, type=None):
+            return capture(cmd_create, title=title, parent=parent, status=status,
+                           blocked_by=blocked_by, type=type)
 
         def set_status(issue, status, reason=None):
             cmd_set_status(SimpleNamespace(issue=issue, status=status,
@@ -698,6 +796,8 @@ def cmd_selftest(_args):
         set_status(dropped_main, "claimed")
         set_status(dropped_main, "resolved")
         assert get_status(dropped_main) == "resolved"
+
+        _selftest_init_renews_tracker_doc(capture)
 
     del os.environ[ROOT_ENV_VAR]
     print("selftest: OK")
