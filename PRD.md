@@ -91,7 +91,8 @@ Verifikation**. Geändert wird die Issue-/Branch-Logik dazwischen.
    verpflichtend — das PRD wird immer in ein Haupt-Issue plus Kind-Issues
    zerlegt, ohne vorherige Nachfrage.
 3. Als Maintainer gilt genau **1 Haupt-Issue = 1 Branch = 1 Worktree = 1 Pull
-   Request**. Der PR wird erst eröffnet, wenn alle Kind-Issues resolved sind.
+   Request**. Der PR wird erst eröffnet, wenn alle Kind-Issues geschlossen
+   sind — `resolved`, oder `superseded` für ein nie umgesetztes Kind-Issue.
 4. Als Maintainer kann ich **mehrere Haupt-Issues gleichzeitig lokal**
    bearbeiten: jedes in einem eigenen Worktree unter `.worktrees/`, gefahren
    von einer eigenen, unabhängigen Claude-Code-Session. Es gibt keine
