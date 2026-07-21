@@ -39,7 +39,9 @@ git remote get-url origin
 Follow AGENTS.md's git rules as usual: confirm the target project is a git
 repository, print its current branch, and ask whether to use it or create a
 new one. The files this skill writes (`.claude/hooks/session-start.sh`,
-`.claude/settings.json`) are ordinary versioned project files.
+`.claude/hooks/worktree_guard.py`, `.claude/hooks/worktree-create.sh`,
+`.claude/settings.json`, and `.gitignore` entries) are ordinary versioned
+project files.
 
 ## 3. Check what's already there
 

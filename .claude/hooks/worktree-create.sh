@@ -24,7 +24,12 @@ set -euo pipefail
 input=$(cat)
 name=$(jq -r .worktree_name <<<"$input")
 base=$(jq -r .base_ref <<<"$input")
-root=$(git rev-parse --show-toplevel)
+# Resolve the *main* checkout's root, not the current worktree's: invoked from
+# inside a linked worktree, --show-toplevel would nest a new .worktrees/ under
+# that worktree. --git-common-dir's parent is shared by every linked worktree,
+# so every worktree stays registered flat against the one .git — the layout
+# AGENTS.md's "Worktree Isolation" rule requires.
+root=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
 dir="$root/.worktrees/$name"
 
 # git's own stdout goes to stderr so the created path is the only thing on our
