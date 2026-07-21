@@ -39,9 +39,7 @@ git remote get-url origin
 Follow AGENTS.md's git rules as usual: confirm the target project is a git
 repository, print its current branch, and ask whether to use it or create a
 new one. The files this skill writes (`.claude/hooks/session-start.sh`,
-`.claude/hooks/worktree_guard.py`, `.claude/hooks/worktree-create.sh`,
-`.claude/settings.json`, and `.gitignore` entries) are ordinary versioned
-project files.
+`.claude/settings.json`) are ordinary versioned project files.
 
 ## 3. Check what's already there
 
@@ -56,23 +54,8 @@ project files.
     silently overwritten: show the user the diff and ask before replacing it.
 - `.claude/hooks/worktree_guard.py` — read it if present, same drift check as
   above against [assets/worktree_guard.py](assets/worktree_guard.py).
-- `.claude/hooks/worktree-create.sh` — read it if present, same drift check as
-  above against [assets/worktree-create.sh](assets/worktree-create.sh). A repo
-  wired before this hook existed won't have it at all — that is the expected
-  drift, and a `WorktreeCreate` entry missing from `.claude/settings.json` (see
-  below) is the same gap seen from the settings side.
 - `.claude/settings.json` — read it if present. Note whether it already wires a
-  `SessionStart` hook, a `PreToolUse` hook, and a `WorktreeCreate` hook. A
-  `WorktreeCreate` entry that is missing, or whose command differs from the one
-  in step 5 (e.g. an older inline `bash -c '…git worktree add…'` blob instead of
-  the `worktree-create.sh` script), is drift to fix — without it, native
-  worktree paths (`EnterWorktree`, `--worktree`, `isolation: worktree`) land in
-  `.claude/worktrees/` instead of `.worktrees/`, breaking the convention
-  AGENTS.md promises.
-- `.gitignore` — check whether it ignores `.claude/.worktree-bypass`,
-  `.worktrees/`, and `.claude/worktrees/` (see step 5b). The bypass marker in
-  particular must be ignored, or a routine `git add -A` during a merge can
-  commit it and disable the guard permanently for every checkout.
+  `SessionStart` hook and a `PreToolUse` hook.
 - `.claude/settings.json` / `.claude/settings.local.json` — check for
   leftover references to the retired marketplace (`enabledPlugins` or
   `extraKnownMarketplaces` mentioning `artkoenig`). If found, point them out
@@ -84,26 +67,20 @@ project files.
 
 ## 4. Install the hook scripts
 
-Copy these three assets into the target project, verbatim — all are already
-generic — and make each executable (`chmod +x`):
+Copy [assets/session-start.sh](assets/session-start.sh) to
+`.claude/hooks/session-start.sh`, and
+[assets/worktree_guard.py](assets/worktree_guard.py) to
+`.claude/hooks/worktree_guard.py`, in the target project, verbatim — both are
+already generic. Make both executable (`chmod +x`).
 
-- [assets/session-start.sh](assets/session-start.sh) → `.claude/hooks/session-start.sh`
-- [assets/worktree_guard.py](assets/worktree_guard.py) → `.claude/hooks/worktree_guard.py`
-- [assets/worktree-create.sh](assets/worktree-create.sh) → `.claude/hooks/worktree-create.sh`
-
-Do not paraphrase or hand-retype any of them. Copy them as-is, so future
-re-runs of this skill can diff byte-for-byte and detect drift reliably. In
-particular, do **not** inline `worktree-create.sh`'s logic back into
-`settings.json` as a `bash -c '…'` blob: that would recreate the second,
-independently drifting copy this script exists to avoid — the settings entry
-references the script by path (step 5).
+Do not paraphrase or hand-retype either script. Copy them as-is, so future
+re-runs of this skill can diff byte-for-byte and detect drift reliably.
 
 ## 5. Wire `.claude/settings.json`
 
 Ensure the target's `.claude/settings.json` contains a `SessionStart` hook
 entry invoking `session-start.sh`, a `PreToolUse` hook entry invoking
-`worktree_guard.py`, a `WorktreeCreate` hook entry invoking
-`worktree-create.sh`, and sets `worktree.baseRef` to `"head"` (see AGENTS.md's
+`worktree_guard.py`, and sets `worktree.baseRef` to `"head"` (see AGENTS.md's
 Worktree Isolation rule — without it, worktree-isolated subagents branch from
 the default branch instead of the session's actual work):
 
@@ -130,16 +107,6 @@ the default branch instead of the session's actual work):
           }
         ]
       }
-    ],
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-create.sh"
-          }
-        ]
-      }
     ]
   },
   "worktree": {
@@ -149,18 +116,10 @@ the default branch instead of the session's actual work):
 ```
 
 - If `.claude/settings.json` doesn't exist, create it with just this content.
-- If it exists, merge all four keys in without disturbing any other hooks or
-  settings already there. If a `SessionStart`, `PreToolUse`, or `WorktreeCreate`
-  entry with this exact command already exists, leave it alone; same for an
-  existing `worktree.baseRef`. If a `WorktreeCreate` entry exists but carries the
-  older inline `bash -c '…git worktree add…'` blob, replace its command with the
-  `worktree-create.sh` path above — that inline blob is the drift step 3 flags.
-- The `WorktreeCreate` hook redirects Claude Code's native worktree paths
-  (`EnterWorktree`, `--worktree`, `isolation: worktree`, background sessions)
-  into `.worktrees/<name>`, so they honor this repo's `.worktrees/` convention
-  and its `.gitignore` entry instead of landing in the default
-  `.claude/worktrees/`. `$CLAUDE_PROJECT_DIR` is exported for every hook command,
-  so the same entry works from the main checkout and from any linked worktree.
+- If it exists, merge all three keys in without disturbing any other hooks or
+  settings already there. If a `SessionStart` or `PreToolUse` entry with this
+  exact command already exists, leave it alone; same for an existing
+  `worktree.baseRef`.
 - `worktree_guard.py` is what actually enforces AGENTS.md's Worktree Isolation
   rule (see that section) — it denies an `Edit`/`Write`/`NotebookEdit` call
   that would make a non-trivial change directly in the main checkout, instead
@@ -168,29 +127,6 @@ the default branch instead of the session's actual work):
   hatch: touching `.claude/.worktree-bypass` in the target project's main
   checkout disables it for a session they've explicitly told to work directly
   in the checkout.
-
-## 5b. Ignore the worktree paths and the bypass marker
-
-Ensure the target's `.gitignore` ignores these three, adding any that are
-missing (append them under a short comment; don't disturb existing entries):
-
-```gitignore
-# Sandbox worktrees for local parallel main-issue work; see AGENTS.md
-# "Worktree Isolation". Never committed.
-.worktrees/
-# Native Claude Code worktrees, in case the WorktreeCreate hook is ever absent.
-.claude/worktrees/
-# Session-scoped override for the worktree_guard.py PreToolUse hook. Local-only,
-# never committed: a routine `git add -A` during a merge would otherwise sweep
-# it into the commit and disable the guard permanently for every checkout.
-.claude/.worktree-bypass
-```
-
-The last entry is the important one: the bypass marker (`.claude/.worktree-bypass`)
-turns the guard off for the whole session, and if it were ever committed it
-would turn the guard off for the whole repo, silently. Ignoring it makes that
-accident impossible. Confirm with `git check-ignore .claude/.worktree-bypass`
-in the target — it should print the path.
 
 ## 6. Activate the deterministic pre-push checks (local)
 
@@ -232,10 +168,9 @@ Tell the user:
   `global-agents-config-and-skills` to clone it (it's a private repo), the same
   access it uses to clone the project itself.
 - That the new/changed files (`.claude/hooks/session-start.sh`,
-  `.claude/hooks/worktree_guard.py`, `.claude/hooks/worktree-create.sh`,
-  `.claude/settings.json`, and any `.gitignore` additions from step 5b) still
-  need to be committed — per AGENTS.md's git rules, don't commit them yourself
-  unless asked. (`core.hooksPath` lives in `.git/config`, which is not committed.)
+  `.claude/hooks/worktree_guard.py`, `.claude/settings.json`) still need to be
+  committed — per AGENTS.md's git rules, don't commit them yourself unless
+  asked. (`core.hooksPath` lives in `.git/config`, which is not committed.)
 - That `worktree_guard.py` runs on every `Edit`/`Write`/`NotebookEdit` call,
   local or cloud — unlike `session-start.sh` and `core.hooksPath`, it is not
   split by environment.
