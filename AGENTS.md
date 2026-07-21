@@ -20,11 +20,14 @@ the `artkoenig` account — anything else (a work, client, or third-party repo)
 is out of scope; skip it silently, don't ask.
 **Action**: Check whether three things are in place: (a) `.claude/hooks/session-start.sh`
 is installed and matches the `cloud-session-bootstrap` skill's canonical
-version, (b) `.claude/hooks/worktree_guard.py` is installed and current, with
-`.claude/settings.json` wiring it into `hooks.PreToolUse` and setting
+version, (b) `.claude/hooks/worktree_guard.py` and
+`.claude/hooks/worktree-create.sh` are installed and current, with
+`.claude/settings.json` wiring the guard into `hooks.PreToolUse`, the redirect
+into `hooks.WorktreeCreate`, and setting
 `worktree.baseRef` to `"head"` — this is what enforces the "Worktree Isolation"
 rule below, not just documents it, so a session missing it silently loses that
-enforcement — and (c) `core.hooksPath` points at this config repo's `.githooks`
+enforcement (the guard) or lets native worktrees escape to `.claude/worktrees/`
+(the redirect) — and (c) `core.hooksPath` points at this config repo's `.githooks`
 so the deterministic `pre-push` checks are active. The checks themselves are
 never copied into other repos — a target repo's `core.hooksPath` points at this
 config repo's (or, in cloud sessions, its clone's) `.githooks`, and the hook
@@ -80,10 +83,16 @@ ever has to reason about which branch it's on; you, the main conversation,
 merge their worktree branches back into it.
 
 Commits & pushes, in your own checkout:
-- Never commit or push automatically — only when I explicitly ask. The one
-  standing exception is the main-issue resolution gate: reaching `resolved`
-  (whole subtree done, `testing` green) is itself the authorization to commit,
-  push, and open the PR for that main-issue — see the automatic-PR bullet below.
+- Never commit or push automatically — only when I explicitly ask.
+- **Equal-rank exception, not a footnote: the main-issue resolution gate.**
+  The moment the last child-issue of a main-issue closes and `testing` is
+  green, the prohibition above stops applying to that main-issue. From there,
+  child-resolution commit → main-issue `resolved` → commit → push → open PR is
+  **one uninterrupted sequence — no question to me anywhere in it**. Stopping
+  to ask "soll ich den PR öffnen?" at this point is a rule violation, not
+  caution: this gate exists precisely so the sequence completes while I'm
+  away. The only two legitimate halts are a blocking finding from `testing`
+  and a genuinely open scope decision I haven't answered yet.
 - Never add a `Co-Authored-By:` trailer of any kind. This is a
   single-maintainer repo with no allow-list; the `pre-push` hook rejects any
   pushed commit whose message carries one.
@@ -126,10 +135,16 @@ directly in the main checkout, before it happens. It approximates the trivial
 criterion below (it cannot see a diff that hasn't happened yet, so it is
 conservative: only a single file with a docs/config extension passes) and
 exempts the issue tracker's own directory, since `decompose.md`/`implement.md`
-write and merge `issue.md` files directly in the checkout by design. It does
+write and merge `issue.md` files directly in the checkout by design. It also
+exempts, *during a merge*, exactly the files Git itself reports as conflicted —
+so resolving the child-branch merges in the main checkout (which this section
+prescribes) works without disabling the guard; anything Git does not list as
+conflicted stays blocked even mid-merge. It does
 not see `Bash`-driven file writes — that gap is deliberate, not a sandbox. If
 I've explicitly said to work directly in the checkout for a task, touch
-`.claude/.worktree-bypass` to disable it for that session.
+`.claude/.worktree-bypass` to disable it for that session — a marker that stays
+git-ignored (via `cloud-session-bootstrap`) so a routine `git add -A` cannot
+commit it and disable the guard for every checkout.
 
 Once the branch above is selected, code-writing work — direct or delegated —
 happens in that worktree, never in the checkout itself:
@@ -137,27 +152,34 @@ happens in that worktree, never in the checkout itself:
   already the default for `issue-implementer`.
 - **Working directly** (no subagent involved): you are already in the session's
   worktree from the rule above; if not (e.g. the change looked trivial but
-  grew), create one now under `.worktrees/` (`git worktree add .worktrees/<slug>
-  <branch>`) and continue the work there, unless the change meets the trivial
-  criterion under "Git & Version Control" or I've said to work directly in the
-  current checkout.
+  grew), create one now with `git worktree add .worktrees/<slug>` — **no branch
+  argument**: git refuses a worktree for the already-checked-out session branch
+  (`fatal: ... is already checked out`), so the worktree branches from HEAD onto
+  a new helper branch instead, exactly like the `WorktreeCreate` hook does.
+  Work and commit there, merge the helper branch back into the session branch
+  from the main checkout, then remove worktree and helper branch — the same
+  lifecycle as a child-issue worktree. Skip all this only when the change meets
+  the trivial criterion under "Git & Version Control" or I've said to work
+  directly in the current checkout.
 
 **Worktrees live under `.worktrees/`.** Create main-issue worktrees with
 `git worktree add .worktrees/<slug>`. Claude Code's native worktree paths
 (`EnterWorktree`, `--worktree`, `isolation: worktree`) are safe too: a
-`WorktreeCreate` hook in `.claude/settings.json` redirects them into
+`WorktreeCreate` hook (`worktree-create.sh`, installed into every set-up repo by
+`cloud-session-bootstrap` alongside the guard) redirects them into
 `.worktrees/<name>` instead of the default `.claude/worktrees/`, so every
 worktree stays inside this repo's `.worktrees/` convention and its `.gitignore`
 entry rather than polluting the main checkout's status. `.worktrees/` is the
 only sanctioned location for a main-issue worktree.
 
-`worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
-the delegated `isolation: worktree` path to work: it's what makes a new worktree
-branch from whatever you just
-checked out above instead of the repository's default branch. Without it,
-every worktree would silently restart from `main`, ignoring the branch
-decided upfront — which is exactly the branch-awareness problem this section
-exists to remove from implementation.
+Branching from the session's current work is guaranteed by the
+`WorktreeCreate` hook itself: it replaces git's native worktree logic entirely
+(Claude Code never passes `worktree.baseRef` to it) and always branches from
+`HEAD` — whatever you just checked out above. `worktree.baseRef` stays set to
+`"head"` in Claude Code's settings as the fallback for a session where the
+hook is ever absent; without either, every worktree would silently restart
+from `main`, ignoring the branch decided upfront — which is exactly the
+branch-awareness problem this section exists to remove from implementation.
 
 **Exception — read-only research/review/test subagents**
 (`spec-researcher`, `standards-reviewer`, `spec-reviewer`, `test-runner`): do
