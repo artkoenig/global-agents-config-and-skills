@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -27,3 +27,4 @@ der Skill sonst prüft.
 - [ ] Ein Worktree, der über die nativen Pfade entsteht, landet nachweislich unter `.worktrees/`
 
 ## Comments
+- WorktreeCreate-Redirect in ein Skript-Asset ausgelagert (assets/worktree-create.sh), das cloud-session-bootstrap in jedes Ziel-Repo kopiert und in settings.json per Pfad verdrahtet; keine zweite Inline-Kopie mehr. Drift-Pruefung im Skill (Schritt 3) erkennt fehlenden/abweichenden Hook. Tests: test_worktree_create.py (nativer Worktree landet unter .worktrees/), test_hook_asset_sync.py (Repo-Kopie == Asset, settings referenziert Skript). Alle 53 deterministischen Tests gruen.
