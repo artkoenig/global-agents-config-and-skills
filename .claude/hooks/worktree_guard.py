@@ -143,11 +143,21 @@ def evaluate_direct_edit(
 # Git plumbing (side-effecting, not unit-tested directly)                     #
 # --------------------------------------------------------------------------- #
 
-def _run_git(*args: str, cwd: Path) -> str | None:
+def _run_git(*args: str, cwd: Path, strip: bool = True) -> str | None:
+    """Run git and return stdout, or None on non-zero exit.
+
+    ``strip`` trims surrounding whitespace, which is right for single-value
+    output like ``rev-parse``/``symbolic-ref``. It must be left off for
+    ``status --porcelain``: that output is parsed by fixed column position, and
+    a global strip would eat the leading space of the first line (` M file`),
+    shifting every ``line[3:]`` slice and truncating the first path.
+    """
     result = subprocess.run(
         ["git", *args], cwd=cwd, capture_output=True, text=True
     )
-    return result.stdout.strip() if result.returncode == 0 else None
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() if strip else result.stdout
 
 
 def _repo_root(cwd: Path) -> str | None:
@@ -183,7 +193,8 @@ def _dirty_files(repo_root: str) -> set[str]:
     """Repo-relative paths with uncommitted changes (staged, unstaged, or
     untracked). Renames are reported under their new path."""
     out = _run_git(
-        "status", "--porcelain", "--untracked-files=all", cwd=Path(repo_root)
+        "status", "--porcelain", "--untracked-files=all", cwd=Path(repo_root),
+        strip=False,
     )
     if not out:
         return set()

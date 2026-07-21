@@ -172,6 +172,22 @@ class PreToolUseCli(unittest.TestCase):
         result = self._run("Edit", str(self.repo / "README.md"))
         self._assert_allowed(result)
 
+    def test_unstaged_modification_parsed_with_full_path(self):
+        # `git status --porcelain` prints an unstaged modification as ` M file`
+        # (leading space). Regression guard: the leading space must survive so
+        # the fixed-column `line[3:]` slice yields the full path, not a
+        # first-character-truncated phantom like `EADME.md`.
+        (self.repo / "README.md").write_text("changed\n")
+        self.assertEqual(guard._dirty_files(str(self.repo)), {"README.md"})
+
+    def test_lone_unstaged_doc_modification_allowed(self):
+        # Reproduction case: a single unstaged-modified doc file as the only
+        # dirty entry, edited again. Before the fix the truncated phantom path
+        # made the guard count it twice and deny this trivial edit.
+        (self.repo / "README.md").write_text("changed\n")
+        result = self._run("Edit", str(self.repo / "README.md"))
+        self._assert_allowed(result)
+
     def test_clean_checkout_single_code_edit_denied(self):
         result = self._run("Write", str(self.repo / "src.py"))
         reason = self._assert_denied(result)
