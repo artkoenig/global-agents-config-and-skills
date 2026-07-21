@@ -74,13 +74,22 @@ to get it off the board — that would record it as implemented. See
    - Working **in the user's checkout**: do not commit on your own — **except**
      at the main-issue resolution gate, where reaching `resolved` authorizes
      committing, pushing, and opening the PR without asking (step 5). For a
-     resolved **child**-issue in the user's checkout, report it and let the user
-     decide when to commit.
+     resolved **child**-issue whose siblings are still open, report it and let
+     the user decide when to commit. But when the child being resolved is the
+     **last** open issue of the main-issue's subtree, its resolution commit is
+     already part of the gate sequence — commit it without asking and proceed
+     straight through steps 2–5. Waiting for the user here would stall the gate
+     right before it fires: the main-issue can never reach `resolved`, and the
+     automatic PR that this gate exists to produce is never opened.
 
 5. **Open the pull request — automatically (main-issue only).** Once a
    main-issue is `resolved` and committed, push its `issue/<slug>` branch and
    open the pull request **without a separate ask** — reaching `resolved` is the
-   standing authorization for this (AGENTS.md, "Commits & pushes"). Push every
+   standing authorization for this (AGENTS.md, "Commits & pushes"). Steps 3–5
+   plus the last child's resolution commit (step 4) form one uninterrupted
+   sequence: do not stop between them to ask whether to commit, push, or open
+   the PR. The only legitimate halts are a blocking `testing` finding (step 2)
+   and a scope decision the user has left genuinely open. Push every
    local commit first, or the PR misses unpushed work. One PR for the whole
    main-issue; the merge stays manual, and the worktree teardown waits for it. A
    **child**-issue never reaches this step — it has no PR of its own.
