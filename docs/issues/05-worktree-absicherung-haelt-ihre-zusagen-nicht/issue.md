@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -45,3 +45,4 @@ deaktivieren. Sie ist in keinem `.gitignore` erfasst.
 - [ ] Die deterministischen Selbsttests decken beide Punkte ab
 
 ## Comments
+- Beide Kind-Issues aufgeloest. Verifikation: 54 deterministische Tests gruen (Guard-Merge-Ausnahme inkl. echtem Merge-Konflikt, WorktreeCreate-Redirect inkl. Flat-Nesting aus Linked Worktree, Asset-Sync, check-ignore). Unabhaengiger Review des Diffs gegen alle Akzeptanzkriterien: alle erfuellt, Doku (AGENTS.md/SKILL.md/README) konsistent, keine blockierenden Findings; zwei Nits (Doku-Vollstaendigkeit, robustere Wurzelaufloesung des Redirect-Skripts) direkt behoben. Repo-Subagenten der testing-Skill sind im Harness nicht verfuegbar, daher Achsen A/B/D per Selbst- und Review-Pruefung abgedeckt, Achse C deterministisch.

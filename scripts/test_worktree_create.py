@@ -47,10 +47,10 @@ class WorktreeCreateRedirect(unittest.TestCase):
             capture_output=True, text=True,
         )
 
-    def _run(self, worktree_name, base_ref):
+    def _run(self, worktree_name, base_ref, cwd=None):
         payload = {"worktree_name": worktree_name, "base_ref": base_ref}
         return subprocess.run(
-            ["bash", str(SCRIPT)], cwd=self.repo,
+            ["bash", str(SCRIPT)], cwd=cwd or self.repo,
             input=json.dumps(payload), capture_output=True, text=True,
         )
 
@@ -71,6 +71,24 @@ class WorktreeCreateRedirect(unittest.TestCase):
         ).stdout
         self.assertIn(str(expected), listing)
         self.assertNotIn(".claude/worktrees", listing)
+
+    def test_stays_flat_when_invoked_from_a_linked_worktree(self):
+        # Invoked with cwd inside a linked worktree, the redirect must still
+        # target the MAIN checkout's .worktrees/, never nest a second
+        # .worktrees/ under the linked worktree (AGENTS.md: register every
+        # worktree flat against the shared .git).
+        first = self._run("child-a", "HEAD")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        linked = self.repo / ".worktrees" / "child-a"
+
+        second = self._run("child-b", "HEAD", cwd=linked)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        expected = self.repo / ".worktrees" / "child-b"
+        self.assertEqual(second.stdout.strip(), str(expected))
+        self.assertFalse(
+            (linked / ".worktrees").exists(),
+            "worktree nested under the linked worktree instead of staying flat",
+        )
 
     def test_nonzero_exit_on_duplicate(self):
         # A second create at the same path must fail (non-zero), so Claude Code
