@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -24,8 +24,9 @@ nennen (Abschnitt „Worktree Isolation", Aufzählung „Working directly" und d
 Layout-Beschreibung). Reine Doku-Änderung, kein Code.
 
 ## Acceptance Criteria
-- [ ] AGENTS.md nennt kein `git worktree add` mit dem bereits ausgecheckten Session-Branch als Argument mehr
-- [ ] Das beschriebene Muster (von HEAD branchen, zurückmergen, aufräumen) ist an allen betroffenen Stellen konsistent
-- [ ] Die Beschreibung deckt sich mit dem Verhalten des `WorktreeCreate`-Hooks (branchen von HEAD)
+- [x] AGENTS.md nennt kein `git worktree add` mit dem bereits ausgecheckten Session-Branch als Argument mehr
+- [x] Das beschriebene Muster (von HEAD branchen, zurückmergen, aufräumen) ist an allen betroffenen Stellen konsistent
+- [x] Die Beschreibung deckt sich mit dem Verhalten des `WorktreeCreate`-Hooks (branchen von HEAD)
 
 ## Comments
+- Behoben: AGENTS.md 'Working directly' beschreibt jetzt das branchlose Muster (von HEAD, zurueckmergen); die Layout-Stelle nannte es bereits korrekt.
