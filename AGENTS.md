@@ -146,10 +146,15 @@ happens in that worktree, never in the checkout itself:
   already the default for `issue-implementer`.
 - **Working directly** (no subagent involved): you are already in the session's
   worktree from the rule above; if not (e.g. the change looked trivial but
-  grew), create one now under `.worktrees/` (`git worktree add .worktrees/<slug>
-  <branch>`) and continue the work there, unless the change meets the trivial
-  criterion under "Git & Version Control" or I've said to work directly in the
-  current checkout.
+  grew), create one now with `git worktree add .worktrees/<slug>` — **no branch
+  argument**: git refuses a worktree for the already-checked-out session branch
+  (`fatal: ... is already checked out`), so the worktree branches from HEAD onto
+  a new helper branch instead, exactly like the `WorktreeCreate` hook does.
+  Work and commit there, merge the helper branch back into the session branch
+  from the main checkout, then remove worktree and helper branch — the same
+  lifecycle as a child-issue worktree. Skip all this only when the change meets
+  the trivial criterion under "Git & Version Control" or I've said to work
+  directly in the current checkout.
 
 **Worktrees live under `.worktrees/`.** Create main-issue worktrees with
 `git worktree add .worktrees/<slug>`. Claude Code's native worktree paths
