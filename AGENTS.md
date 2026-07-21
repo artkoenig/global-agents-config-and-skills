@@ -83,10 +83,16 @@ ever has to reason about which branch it's on; you, the main conversation,
 merge their worktree branches back into it.
 
 Commits & pushes, in your own checkout:
-- Never commit or push automatically — only when I explicitly ask. The one
-  standing exception is the main-issue resolution gate: reaching `resolved`
-  (whole subtree done, `testing` green) is itself the authorization to commit,
-  push, and open the PR for that main-issue — see the automatic-PR bullet below.
+- Never commit or push automatically — only when I explicitly ask.
+- **Equal-rank exception, not a footnote: the main-issue resolution gate.**
+  The moment the last child-issue of a main-issue closes and `testing` is
+  green, the prohibition above stops applying to that main-issue. From there,
+  child-resolution commit → main-issue `resolved` → commit → push → open PR is
+  **one uninterrupted sequence — no question to me anywhere in it**. Stopping
+  to ask "soll ich den PR öffnen?" at this point is a rule violation, not
+  caution: this gate exists precisely so the sequence completes while I'm
+  away. The only two legitimate halts are a blocking finding from `testing`
+  and a genuinely open scope decision I haven't answered yet.
 - Never add a `Co-Authored-By:` trailer of any kind. This is a
   single-maintainer repo with no allow-list; the `pre-push` hook rejects any
   pushed commit whose message carries one.
