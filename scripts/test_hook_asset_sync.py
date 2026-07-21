@@ -15,13 +15,26 @@ Run: python3 scripts/test_hook_asset_sync.py
 """
 
 import json
+import sys
 import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = REPO_ROOT / "scripts"
 ASSET_DIR = REPO_ROOT / "skills" / "cloud-session-bootstrap" / "assets"
 HOOK_DIR = REPO_ROOT / ".claude" / "hooks"
 SETTINGS = REPO_ROOT / ".claude" / "settings.json"
+
+# Bind the two modules that each keep a hand-maintained copy of the same
+# constant(s): the authoritative rules module and the deliberately
+# self-contained guard asset. Imported the same way the dedicated per-module
+# tests import them (scripts/ and the asset dir on sys.path); this test only
+# reads their constants, never their behaviour.
+sys.path.insert(0, str(ASSET_DIR))
+sys.path.insert(0, str(SCRIPTS_DIR))
+
+import git_workflow_rules as rules  # noqa: E402
+import worktree_guard as guard  # noqa: E402
 
 # Hooks this config repo dogfoods in its own `.claude/hooks/` must match the
 # skill's canonical asset byte-for-byte, so re-running the skill would detect no
@@ -68,6 +81,35 @@ class SettingsReferenceScriptsByPath(unittest.TestCase):
         cmds = self._commands("PreToolUse")
         self.assertTrue(any("worktree_guard.py" in c for c in cmds),
                         "PreToolUse does not wire worktree_guard.py")
+
+
+# Constants that git_workflow_rules.py (authoritative) and the self-contained
+# worktree_guard.py asset each define independently and must keep identical by
+# hand. A cross-repo import is impossible on purpose (the guard is copied into
+# foreign repos with no access to this checkout), so nothing but this test binds
+# the copies together. Each entry maps a human label to the two frozensets that
+# must stay equal.
+#
+# The guard additionally defines CHECKED_TOOLS, DEFAULT_ISSUE_TRACKER_DIR and
+# BYPASS_MARKER_RELPATH, but those have no counterpart in the rules module —
+# they are guard-only, not hand-synced pairs — so the only shared constants are
+# the two below.
+HAND_SYNCED_CONSTANTS = (
+    ("trivial file extensions", rules.TRIVIAL_EXTENSIONS, guard.TRIVIAL_EXTENSIONS),
+    ("protected branches", rules.PROTECTED_REFS, guard.PROTECTED_BRANCHES),
+)
+
+
+class HandSyncedConstantsAgree(unittest.TestCase):
+    def test_copies_are_identical(self):
+        for label, authoritative, copy in HAND_SYNCED_CONSTANTS:
+            with self.subTest(constant=label):
+                self.assertEqual(
+                    authoritative, copy,
+                    f"{label} have drifted between git_workflow_rules.py and "
+                    "worktree_guard.py; the pre-edit guard and the pre-push hook "
+                    "would classify changes differently — re-sync the copies",
+                )
 
 
 if __name__ == "__main__":
