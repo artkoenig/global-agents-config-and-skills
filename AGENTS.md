@@ -142,12 +142,14 @@ happens in that worktree, never in the checkout itself:
   criterion under "Git & Version Control" or I've said to work directly in the
   current checkout.
 
-**Use `.worktrees/`, not the native worktree tool.** Create these main-issue
-worktrees with `git worktree add .worktrees/<slug>` — do **not** use Claude
-Code's `EnterWorktree` or `--worktree`. Those put the worktree under
-`.claude/worktrees/`, outside this repo's `.worktrees/` convention and its
-`.gitignore` entry, where it pollutes the main checkout's status. `.worktrees/`
-is the only sanctioned location for a main-issue worktree.
+**Worktrees live under `.worktrees/`.** Create main-issue worktrees with
+`git worktree add .worktrees/<slug>`. Claude Code's native worktree paths
+(`EnterWorktree`, `--worktree`, `isolation: worktree`) are safe too: a
+`WorktreeCreate` hook in `.claude/settings.json` redirects them into
+`.worktrees/<name>` instead of the default `.claude/worktrees/`, so every
+worktree stays inside this repo's `.worktrees/` convention and its `.gitignore`
+entry rather than polluting the main checkout's status. `.worktrees/` is the
+only sanctioned location for a main-issue worktree.
 
 `worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
 the delegated `isolation: worktree` path to work: it's what makes a new worktree
