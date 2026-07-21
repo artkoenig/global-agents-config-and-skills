@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: [06]
 
@@ -36,9 +36,10 @@ gleichrangige Regel formulieren statt als Nebensatz). Reine Doku-Änderung.
 Blockiert durch 06, weil beide dieselbe AGENTS.md-Sektion anfassen.
 
 ## Acceptance Criteria
-- [ ] `resolve.md` verlangt beim letzten Kind-Issue eines Haupt-Issues keinen Nutzer-Halt mehr vor dem Commit
-- [ ] Die Sequenz „letztes Kind zu → testing grün → Haupt-Issue resolved → Commit → Push → PR" ist in resolve.md und AGENTS.md als ununterbrochen und rückfragefrei beschrieben
-- [ ] Die zulässigen Haltegründe (blockierende Funde, offene Scope-Entscheidung) sind explizit benannt
-- [ ] AGENTS.md formuliert die Gate-Ausnahme gleichrangig zum „Never commit"-Verbot, sodass kein Widerspruch mehr besteht
+- [x] `resolve.md` verlangt beim letzten Kind-Issue eines Haupt-Issues keinen Nutzer-Halt mehr vor dem Commit
+- [x] Die Sequenz „letztes Kind zu → testing grün → Haupt-Issue resolved → Commit → Push → PR" ist in resolve.md und AGENTS.md als ununterbrochen und rückfragefrei beschrieben
+- [x] Die zulässigen Haltegründe (blockierende Funde, offene Scope-Entscheidung) sind explizit benannt
+- [x] AGENTS.md formuliert die Gate-Ausnahme gleichrangig zum „Never commit"-Verbot, sodass kein Widerspruch mehr besteht
 
 ## Comments
+- Behoben: AGENTS.md formuliert die Gate-Ausnahme als gleichrangige Regel (ununterbrochene Sequenz, Rueckfrage am Gate = Regelverstoss; zulaessige Halte: blockierender testing-Fund, offene Scope-Entscheidung). resolve.md Schritt 4: das letzte Kind-Issue committet ohne Rueckfrage und geht direkt ins Gate; Schritt 5 nennt die Sequenz explizit.
