@@ -104,8 +104,11 @@ Ensure the target's `.claude/settings.json` contains a `SessionStart` hook
 entry invoking `session-start.sh`, a `PreToolUse` hook entry invoking
 `worktree_guard.py`, a `WorktreeCreate` hook entry invoking
 `worktree-create.sh`, and sets `worktree.baseRef` to `"head"` (see AGENTS.md's
-Worktree Isolation rule — without it, worktree-isolated subagents branch from
-the default branch instead of the session's actual work):
+Worktree Isolation rule — the hook itself always branches from `HEAD`, since
+Claude Code never passes `worktree.baseRef` to a `WorktreeCreate` hook; the
+setting is the fallback so that a session where the hook is absent still
+branches worktree-isolated subagents from the session's actual work instead of
+the default branch):
 
 ```json
 {
