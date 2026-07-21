@@ -8,7 +8,7 @@
 - When I ask you to investigate a matter, do not make any changes to existing files. Clarify the matter and provide an explanation with a recommendation.
 - If you are uncertain during implementation and need to consult the web, place absolute priority on official documentation without exception. Conduct an intensive deep search directly on official developer sites or API references, to find the solution before considering secondary sources (such as forums or blogs).
 - Additionally, if your analysis reveals that an already implemented solution in the code can be improved or optimized, proactively suggest these improvements.
-- Keep your responses in the main conversation precise and short. State findings, decisions, and what changed — skip recaps, restated file contents, and step-by-step narration. Push detail into subagent reports, files, or tool output instead of the conversation; this conserves context.
+- Keep your responses in the main conversation precise and short. State findings, decisions, and what changed — skip recaps, restated file contents, and step-by-step narration. Word it as simply and understandably as you can — plain everyday language, short sentences, no jargon or convoluted phrasing where a simple wording does the job; being short must never make the answer hard to follow. Push detail into subagent reports, files, or tool output instead of the conversation; this conserves context.
 
 
 ## Cloud Session Bootstrap Trigger
