@@ -20,11 +20,14 @@ the `artkoenig` account — anything else (a work, client, or third-party repo)
 is out of scope; skip it silently, don't ask.
 **Action**: Check whether three things are in place: (a) `.claude/hooks/session-start.sh`
 is installed and matches the `cloud-session-bootstrap` skill's canonical
-version, (b) `.claude/hooks/worktree_guard.py` is installed and current, with
-`.claude/settings.json` wiring it into `hooks.PreToolUse` and setting
+version, (b) `.claude/hooks/worktree_guard.py` and
+`.claude/hooks/worktree-create.sh` are installed and current, with
+`.claude/settings.json` wiring the guard into `hooks.PreToolUse`, the redirect
+into `hooks.WorktreeCreate`, and setting
 `worktree.baseRef` to `"head"` — this is what enforces the "Worktree Isolation"
 rule below, not just documents it, so a session missing it silently loses that
-enforcement — and (c) `core.hooksPath` points at this config repo's `.githooks`
+enforcement (the guard) or lets native worktrees escape to `.claude/worktrees/`
+(the redirect) — and (c) `core.hooksPath` points at this config repo's `.githooks`
 so the deterministic `pre-push` checks are active. The checks themselves are
 never copied into other repos — a target repo's `core.hooksPath` points at this
 config repo's (or, in cloud sessions, its clone's) `.githooks`, and the hook
@@ -126,10 +129,16 @@ directly in the main checkout, before it happens. It approximates the trivial
 criterion below (it cannot see a diff that hasn't happened yet, so it is
 conservative: only a single file with a docs/config extension passes) and
 exempts the issue tracker's own directory, since `decompose.md`/`implement.md`
-write and merge `issue.md` files directly in the checkout by design. It does
+write and merge `issue.md` files directly in the checkout by design. It also
+exempts, *during a merge*, exactly the files Git itself reports as conflicted —
+so resolving the child-branch merges in the main checkout (which this section
+prescribes) works without disabling the guard; anything Git does not list as
+conflicted stays blocked even mid-merge. It does
 not see `Bash`-driven file writes — that gap is deliberate, not a sandbox. If
 I've explicitly said to work directly in the checkout for a task, touch
-`.claude/.worktree-bypass` to disable it for that session.
+`.claude/.worktree-bypass` to disable it for that session — a marker that stays
+git-ignored (via `cloud-session-bootstrap`) so a routine `git add -A` cannot
+commit it and disable the guard for every checkout.
 
 Once the branch above is selected, code-writing work — direct or delegated —
 happens in that worktree, never in the checkout itself:
@@ -145,7 +154,8 @@ happens in that worktree, never in the checkout itself:
 **Worktrees live under `.worktrees/`.** Create main-issue worktrees with
 `git worktree add .worktrees/<slug>`. Claude Code's native worktree paths
 (`EnterWorktree`, `--worktree`, `isolation: worktree`) are safe too: a
-`WorktreeCreate` hook in `.claude/settings.json` redirects them into
+`WorktreeCreate` hook (`worktree-create.sh`, installed into every set-up repo by
+`cloud-session-bootstrap` alongside the guard) redirects them into
 `.worktrees/<name>` instead of the default `.claude/worktrees/`, so every
 worktree stays inside this repo's `.worktrees/` convention and its `.gitignore`
 entry rather than polluting the main checkout's status. `.worktrees/` is the

@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -32,3 +32,4 @@ Routinebefehl. Die Datei ist in keinem `.gitignore` erfasst.
 - [ ] Beides ist durch deterministische Tests abgedeckt
 
 ## Comments
+- worktree_guard.py erkennt den Merge-Zustand (git diff --diff-filter=U) und laesst die von Git als konfliktbehaftet gefuehrten Dateien im Hauptcheckout zu; alles andere bleibt auch waehrend des Merges blockiert, ausserhalb unveraendert. Bypass-Marker: in dieser .gitignore erfasst, und der Bootstrap-Skill (Schritt 5b) traegt den Eintrag in Ziel-Repos nach, sodass git add -A ihn nicht eincheckt. Tests: Merge-Ausnahme (Unit + echter Merge-Konflikt) und check-ignore.
