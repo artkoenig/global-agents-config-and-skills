@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-create.sh"
+            "command": "bash -c 'input=$(cat); name=$(jq -r .worktree_name <<<\"$input\"); base=$(jq -r .base_ref <<<\"$input\"); root=$(git rev-parse --show-toplevel); dir=\"$root/.worktrees/$name\"; git worktree add \"$dir\" \"$base\" >&2; echo \"$dir\"'"
           }
         ]
       }
