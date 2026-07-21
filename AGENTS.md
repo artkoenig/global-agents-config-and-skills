@@ -161,13 +161,14 @@ worktree stays inside this repo's `.worktrees/` convention and its `.gitignore`
 entry rather than polluting the main checkout's status. `.worktrees/` is the
 only sanctioned location for a main-issue worktree.
 
-`worktree.baseRef` must stay set to `"head"` in Claude Code's settings for
-the delegated `isolation: worktree` path to work: it's what makes a new worktree
-branch from whatever you just
-checked out above instead of the repository's default branch. Without it,
-every worktree would silently restart from `main`, ignoring the branch
-decided upfront — which is exactly the branch-awareness problem this section
-exists to remove from implementation.
+Branching from the session's current work is guaranteed by the
+`WorktreeCreate` hook itself: it replaces git's native worktree logic entirely
+(Claude Code never passes `worktree.baseRef` to it) and always branches from
+`HEAD` — whatever you just checked out above. `worktree.baseRef` stays set to
+`"head"` in Claude Code's settings as the fallback for a session where the
+hook is ever absent; without either, every worktree would silently restart
+from `main`, ignoring the branch decided upfront — which is exactly the
+branch-awareness problem this section exists to remove from implementation.
 
 **Exception — read-only research/review/test subagents**
 (`spec-researcher`, `standards-reviewer`, `spec-reviewer`, `test-runner`): do
