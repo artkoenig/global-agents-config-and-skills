@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -23,8 +23,9 @@ Ein Satz an diesen Stellen genügt: nach `create` die erzeugte `issue.md`
 erst lesen, dann per Edit/Write befüllen.
 
 ## Acceptance Criteria
-- [ ] Die von `init` geschriebene Tracker-Doku weist auf Read-then-Edit für frisch erzeugte issue.md-Dateien hin
-- [ ] `decompose.md` enthält denselben Hinweis an der Stelle, die das Befüllen beschreibt
-- [ ] `tracker.py selftest` und die deterministische Suite bleiben grün
+- [x] Die von `init` geschriebene Tracker-Doku weist auf Read-then-Edit für frisch erzeugte issue.md-Dateien hin
+- [x] `decompose.md` enthält denselben Hinweis an der Stelle, die das Befüllen beschreibt
+- [x] `tracker.py selftest` und die deterministische Suite bleiben grün
 
 ## Comments
+- Behoben (Merge a7bb6c6): Hinweis in TRACKER_DOC (tracker.py) und decompose.md Schritt 4. Dieses Repo selbst hat kein docs/agents/ — Ziel-Repos erhalten den Text beim naechsten init.

@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -20,8 +20,9 @@ Gleiches gilt für `PROTECTED_BRANCHES`, falls auch dort beide Module eine
 eigene Kopie halten — prüfen und, wenn ja, mit absichern.
 
 ## Acceptance Criteria
-- [ ] Ein deterministischer Test schlägt fehl, sobald `TRIVIAL_EXTENSIONS` in `git_workflow_rules.py` und `worktree_guard.py` (Asset) voneinander abweichen
-- [ ] Weitere von Hand synchronisierte Konstanten zwischen den beiden Modulen sind identifiziert und gleich abgesichert oder als nicht vorhanden belegt
-- [ ] Der Test läuft im bestehenden Suite-Discovery-Lauf (`python3 -m unittest discover -s scripts`) mit
+- [x] Ein deterministischer Test schlägt fehl, sobald `TRIVIAL_EXTENSIONS` in `git_workflow_rules.py` und `worktree_guard.py` (Asset) voneinander abweichen
+- [x] Weitere von Hand synchronisierte Konstanten zwischen den beiden Modulen sind identifiziert und gleich abgesichert oder als nicht vorhanden belegt
+- [x] Der Test läuft im bestehenden Suite-Discovery-Lauf (`python3 -m unittest discover -s scripts`) mit
 
 ## Comments
+- Behoben (Merge 81264df): HandSyncedConstantsAgree in test_hook_asset_sync.py bindet TRIVIAL_EXTENSIONS und PROTECTED_REFS/PROTECTED_BRANCHES; weitere Paare als nicht vorhanden belegt.

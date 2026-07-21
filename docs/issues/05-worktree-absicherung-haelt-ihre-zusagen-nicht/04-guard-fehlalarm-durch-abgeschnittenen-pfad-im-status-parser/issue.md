@@ -1,4 +1,4 @@
-Status: claimed
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -26,10 +26,11 @@ Ein-Wert-Ausgaben wie `rev-parse` richtig, für die zeilenweise geparste
 Aufrufer nicht ändern.
 
 ## Acceptance Criteria
-- [ ] Eine unstaged geänderte Datei an erster Stelle der Porcelain-Ausgabe wird mit vollem Pfad geparst
-- [ ] Der Reproduktionsfall (einzige dirty Datei ` M docs/adr/x.md`, Edit ebendieser Datei) wird erlaubt
-- [ ] Die übrigen `_run_git`-Aufrufer (`rev-parse`, `symbolic-ref`, `diff`) verhalten sich unverändert
-- [ ] Ein deterministischer Regressionstest deckt den Fall ab (erste Zeile mit führendem Leerzeichen)
-- [ ] Repo-Kopie und Skill-Asset bleiben byte-identisch (Sync-Test bleibt grün)
+- [x] Eine unstaged geänderte Datei an erster Stelle der Porcelain-Ausgabe wird mit vollem Pfad geparst
+- [x] Der Reproduktionsfall (einzige dirty Datei ` M docs/adr/x.md`, Edit ebendieser Datei) wird erlaubt
+- [x] Die übrigen `_run_git`-Aufrufer (`rev-parse`, `symbolic-ref`, `diff`) verhalten sich unverändert
+- [x] Ein deterministischer Regressionstest deckt den Fall ab (erste Zeile mit führendem Leerzeichen)
+- [x] Repo-Kopie und Skill-Asset bleiben byte-identisch (Sync-Test bleibt grün)
 
 ## Comments
+- Behoben (Merge 7c696d5): _run_git mit strip-Parameter, Porcelain-Aufruf strippt nicht mehr global; zwei Regressionstests. Der Fehler trat waehrend der Umsetzung zweimal live in dieser Session auf (docs/issues- und skills-Pfade als ocs/kills geparst).
