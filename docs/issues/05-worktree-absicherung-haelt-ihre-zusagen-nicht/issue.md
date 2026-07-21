@@ -40,10 +40,11 @@ Im Repo eingecheckt würde die Datei den Guard dauerhaft und für jeden Checkout
 deaktivieren. Sie ist in keinem `.gitignore` erfasst.
 
 ## Acceptance Criteria
-- [ ] Beide Zusagen aus AGENTS.md werden in eingerichteten Repos tatsächlich eingelöst
-- [ ] Der Stand ist in AGENTS.md und im `cloud-session-bootstrap`-Skill konsistent beschrieben
-- [ ] Die deterministischen Selbsttests decken beide Punkte ab
+- [x] Beide Zusagen aus AGENTS.md werden in eingerichteten Repos tatsächlich eingelöst
+- [x] Der Stand ist in AGENTS.md und im `cloud-session-bootstrap`-Skill konsistent beschrieben
+- [x] Die deterministischen Selbsttests decken beide Punkte ab
 
 ## Comments
 - Beide Kind-Issues aufgeloest. Verifikation: 54 deterministische Tests gruen (Guard-Merge-Ausnahme inkl. echtem Merge-Konflikt, WorktreeCreate-Redirect inkl. Flat-Nesting aus Linked Worktree, Asset-Sync, check-ignore). Unabhaengiger Review des Diffs gegen alle Akzeptanzkriterien: alle erfuellt, Doku (AGENTS.md/SKILL.md/README) konsistent, keine blockierenden Findings; zwei Nits (Doku-Vollstaendigkeit, robustere Wurzelaufloesung des Redirect-Skripts) direkt behoben. Repo-Subagenten der testing-Skill sind im Harness nicht verfuegbar, daher Achsen A/B/D per Selbst- und Review-Pruefung abgedeckt, Achse C deterministisch.
 - 2026-07-21: PR #14 (Umsetzung der Kind-Issues 01+02) wurde per PR #15 revertet, weil Cloud-Sessions nicht mehr starteten. Ursache (offizielle Hook-Doku): WorktreeCreate-Hooks erhalten nur das Feld 'name' — der Hook las 'worktree_name' und 'base_ref', beides nicht existent. Inhalte von PR #14 per Cherry-Pick wiederhergestellt; der Vertrags-Fix ist Kind-Issue 03.
+- Vier-Achsen-Verifikation grün (Tests 59/59; Standards ohne Blocker; Spezifikation: alle Kriterien der 8 Kind-Issues umgesetzt; Doku: 0 Funde). Umfasst die wiederhergestellten PR-#14-Inhalte (01, 02), den WorktreeCreate-Vertrags-Fix (03) und die Findings aus der Session-Recherche (04-08).
