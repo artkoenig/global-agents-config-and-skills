@@ -93,8 +93,10 @@ python3 <skill>/scripts/tracker.py create \
   --title "Cart API" --parent "<main-id>" --status ready-for-agent --blocked-by "01"
 ```
 
-Then fill each issue's `## Description` and `## Acceptance Criteria`. Keep the
-description behavior-focused; avoid hardcoding file paths that go stale.
+Then fill each issue's `## Description` and `## Acceptance Criteria`. Because each
+`issue.md` was just created, read it before editing it — the `Write` tool only
+overwrites a file already read this session. Keep the description
+behavior-focused; avoid hardcoding file paths that go stale.
 
 (This step only applies when Step 2 produced more than one slice. For exactly
 one slice, Step 3a already handled it and there is no child-issue to create
