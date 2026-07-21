@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 Type: fix
 Blocked by: None
 
@@ -37,11 +37,12 @@ Weitere Doku-Befunde, die der Fix berücksichtigen muss:
   braucht keine Nachbildung.
 
 ## Acceptance Criteria
-- [ ] Der Hook liest das dokumentierte Feld `name`; `worktree_name`/`base_ref` kommen nicht mehr vor
-- [ ] Der Hook brancht von HEAD (Verhalten von `git worktree add <pfad>` ohne Ref), gemäß der `"head"`-Semantik aus AGENTS.md
-- [ ] Gefüttert mit dem dokumentierten Input-JSON erzeugt der Hook einen Worktree unter `.worktrees/<name>` und gibt dessen Pfad als letzte stdout-Zeile aus
-- [ ] Repo-Kopie und Skill-Asset bleiben byte-identisch (bestehender Sync-Test bleibt grün)
-- [ ] Ein deterministischer Test ruft den Hook mit dem dokumentierten Input-JSON auf (nicht mit den alten Fantasie-Feldern) und deckt den HEAD-Branch-Fall ab
-- [ ] `test_worktree_create.py` und SKILL.md widersprechen dem korrigierten Vertrag nirgends mehr
+- [x] Der Hook liest das dokumentierte Feld `name`; `worktree_name`/`base_ref` kommen nicht mehr vor
+- [x] Der Hook brancht von HEAD (Verhalten von `git worktree add <pfad>` ohne Ref), gemäß der `"head"`-Semantik aus AGENTS.md
+- [x] Gefüttert mit dem dokumentierten Input-JSON erzeugt der Hook einen Worktree unter `.worktrees/<name>` und gibt dessen Pfad als letzte stdout-Zeile aus
+- [x] Repo-Kopie und Skill-Asset bleiben byte-identisch (bestehender Sync-Test bleibt grün)
+- [x] Ein deterministischer Test ruft den Hook mit dem dokumentierten Input-JSON auf (nicht mit den alten Fantasie-Feldern) und deckt den HEAD-Branch-Fall ab
+- [x] `test_worktree_create.py` und SKILL.md widersprechen dem korrigierten Vertrag nirgends mehr
 
 ## Comments
+- Behoben in Commit 4bd6245: Hook liest 'jq -er .name', brancht ohne Commit-ish von HEAD; Tests auf den dokumentierten Vertrag umgestellt (inkl. HEAD-Branch- und Fehlend-Feld-Fall), AGENTS.md/SKILL.md beschreiben baseRef als Fallback. Vier-Achsen-Verifikation grün (56/56 Tests, Spez ohne Befund); E2E bestaetigt durch echten isolation:worktree-Dispatch (Worktree unter .worktrees/, HEAD-Branching korrekt).
