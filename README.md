@@ -1,6 +1,6 @@
 # global-agents-config-and-skills
 
-Artjom König's global Claude Code configuration, personal skills and subagents.
+My global Claude Code configuration, personal skills and subagents.
 This repository serves three roles:
 
 1. **Global agent instructions** — `AGENTS.md` (symlinked as `~/.claude/CLAUDE.md`).
@@ -14,6 +14,21 @@ There is no plugin marketplace. Environments without this machine's
 subagents through a per-project `SessionStart` hook that clones this repo
 directly; see [Using this in a cloud session](#using-this-in-a-cloud-session)
 below.
+
+## The skills
+
+`skills/` holds seven personal skills. Most are triggered automatically by their
+`description`; a few are also `/`-invocable.
+
+| Skill | Role |
+| --- | --- |
+| `grill-me-for-spec` | Interactive requirements analysis that grills you one question at a time, researches the codebase, refines the domain glossary (`CONTEXT.md`) and ADRs, writes a PRD, and opens the main-issue that carries it. |
+| `issue-tracker` | Local, file-based tracker under `docs/issues/`. A main-issue maps 1:1 to one branch, worktree and PR; its nested child-issues are that PR's vertical slices. Handles init, lifecycle, breakdown and implementation. |
+| `engineering-principles` | The design and implementation principles that must be read before any architectural decision or code change. Preloaded into subagents via their `skills:` frontmatter. |
+| `testing` | The four-axis verification (Standards, Specification, Tests, Docs) that orchestrates the four reviewer subagents below. |
+| `cloud-session-bootstrap` | Wires a project so its cloud sessions load these skills and subagents via a `SessionStart` hook. See [Using this in a cloud session](#using-this-in-a-cloud-session). |
+| `self-test` | Runs the deterministic git checks and behavioral evals that keep this repo's own rules honest. See [Self-testing the workflow](#self-testing-the-workflow). |
+| `skill-creator` | Create, edit, optimize and benchmark skills. |
 
 ## The subagents
 
@@ -67,6 +82,25 @@ python3 skills/issue-tracker/scripts/tracker.py set-status <id> superseded \
 ```
 
 See `skills/issue-tracker/reference/states.md`.
+
+## Self-testing the workflow
+
+`AGENTS.md`, the skills and the subagents all govern how Claude Code behaves, so
+every rule is bound to a test — they cannot silently drift. The `self-test`
+skill drives two kinds of check:
+
+- **Deterministic checks** — instant, no-LLM unit tests under `scripts/`
+  (`test_*.py`), run with `python3 -m unittest discover -s scripts -p 'test_*.py'`.
+  They cover the git-workflow rules that `.githooks/pre-push` enforces on every
+  push (via `scripts/git_workflow_rules.py`): branch naming, no direct push to a
+  protected branch, and no agent `Co-authored-by` trailer.
+- **Behavioral evals** — full agentic scenarios, defined in `evals.json` files
+  next to what they test (under `evals/agents-md/`, `agents/*/evals/` and
+  `skills/*/evals/`), that verify a rule actually behaves as documented. The
+  `self-test` skill spawns executor subagents in isolated worktrees, grades the
+  transcripts, and reports a pass/fail table.
+
+The rationale is captured in `PRD.md`.
 
 ## Using this in a cloud session
 
