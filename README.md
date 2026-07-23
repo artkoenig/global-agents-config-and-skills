@@ -1,6 +1,6 @@
 # global-agents-config-and-skills
 
-Artjom König's global Claude Code configuration, personal skills and subagents.
+My global Claude Code configuration, personal skills and subagents.
 This repository serves three roles:
 
 1. **Global agent instructions** — `AGENTS.md` (symlinked as `~/.claude/CLAUDE.md`).
