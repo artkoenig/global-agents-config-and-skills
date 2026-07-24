@@ -11,6 +11,7 @@ Run: python3 scripts/test_worktree_guard.py
 """
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -147,6 +148,12 @@ class PreToolUseCli(unittest.TestCase):
 
     def _run(self, tool_name, file_path, env=None):
         payload = {"tool_name": tool_name, "tool_input": {"file_path": file_path}}
+        if env is None:
+            # Default to a *local* environment: strip CLAUDE_CODE_REMOTE so the
+            # local-behaviour tests below stay deterministic even when the suite
+            # itself runs inside a cloud session (where the guard no-ops). Cloud
+            # behaviour is covered by the dedicated tests that set it explicitly.
+            env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_REMOTE"}
         return subprocess.run(
             [sys.executable, MODULE_PATH], cwd=self.repo,
             input=json.dumps(payload), capture_output=True, text=True, env=env,
@@ -224,6 +231,28 @@ class PreToolUseCli(unittest.TestCase):
         (self.repo / ".claude" / ".worktree-bypass").touch()
         result = self._run("Write", str(self.repo / "src.py"))
         self._assert_allowed(result)
+
+    def test_remote_session_allows_direct_code_edit(self):
+        # Cloud sessions run in their own clone, so the guard no-ops: a direct
+        # code edit in the main checkout that would be denied locally is allowed.
+        env = {**os.environ, "CLAUDE_CODE_REMOTE": "true"}
+        result = self._run("Write", str(self.repo / "src.py"), env=env)
+        self._assert_allowed(result)
+
+    def test_remote_session_allows_edit_on_protected_branch(self):
+        # The remote no-op is total: even the protected-branch check is skipped,
+        # since there is no shared checkout to protect in a per-session clone.
+        self._git("branch", "-m", "main")
+        env = {**os.environ, "CLAUDE_CODE_REMOTE": "true"}
+        result = self._run("Edit", str(self.repo / "README.md"), env=env)
+        self._assert_allowed(result)
+
+    def test_remote_flag_other_than_true_still_enforced(self):
+        # Only the exact "true" value disables the guard; any other value leaves
+        # local enforcement intact, matching the SessionStart hook's check.
+        env = {**os.environ, "CLAUDE_CODE_REMOTE": "1"}
+        result = self._run("Write", str(self.repo / "src.py"), env=env)
+        self._assert_denied(result)
 
     def _start_merge_conflict(self):
         """Leave the repo mid-merge with `conflict.py` unmerged."""

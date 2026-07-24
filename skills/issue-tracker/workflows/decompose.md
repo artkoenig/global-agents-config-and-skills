@@ -145,10 +145,10 @@ Do not write implementation code here. Tell the user the breakdown is complete.
   proceeds directly on the main-issue id — see implement.md's
   [single-slice section](implement.md#c-single-slice-main-issue-no-child-issues).
 
-Note the handoff prerequisite: the issue documentation just written under
-`docs/issues/` (the new child-issues, or the main-issue's own updated
-`## Acceptance Criteria` in the single-slice case) is still uncommitted. Before
-implement.md's parallel dispatch can spawn `issue-implementer` worktrees, this
-documentation **must be committed** — a worktree branches from committed
-history and cannot otherwise read its own `issue.md` (see implement.md,
-Section A, step 3).
+The issue documentation just written under `docs/issues/` (the new
+child-issues, or the main-issue's own updated `## Acceptance Criteria` in the
+single-slice case) may stay uncommitted — implementation can start right away.
+Child-issues are implemented sequentially, directly in the session's working
+tree on the main-issue branch (no per-child worktree branching from committed
+history), so the `issue-implementer` reads its own `issue.md` straight from the
+working tree.

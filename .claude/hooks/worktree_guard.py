@@ -25,6 +25,13 @@ project has no access to this config repo's checkout, so TRIVIAL_EXTENSIONS is
 duplicated from there and must be kept in sync by hand.
 
 Escape hatches:
+  - Cloud (remote) sessions — `CLAUDE_CODE_REMOTE=true` — are exempt entirely:
+    the hook no-ops before any check. A Claude Code on the web session runs in
+    its own freshly cloned repository, so the isolation this guard exists to
+    provide is already guaranteed by that separate clone; there is no shared
+    checkout to protect. AGENTS.md's "Worktree Isolation" rule is therefore
+    local-only, and this is the same `CLAUDE_CODE_REMOTE` signal the
+    SessionStart hook keys off.
   - A bypass marker file `<main-repo-root>/.claude/.worktree-bypass` disables
     every check below, for a session the user has explicitly told to work
     directly in the checkout (mirrors this repo's `git push --no-verify`). The
@@ -237,6 +244,13 @@ def _deny(reason: str) -> None:
 
 
 def main() -> int:
+    # Cloud (remote) sessions clone the repository into their own isolated
+    # environment, so worktree isolation is already guaranteed and this guard
+    # has nothing to protect — no-op before touching stdin or git. AGENTS.md's
+    # "Worktree Isolation" rule is a local-only rule for exactly this reason.
+    if os.environ.get("CLAUDE_CODE_REMOTE") == "true":
+        return 0
+
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):

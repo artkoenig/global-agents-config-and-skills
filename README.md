@@ -39,7 +39,7 @@ summary comes back.
 | Subagent | Model | Role |
 | --- | --- | --- |
 | `spec-researcher` | `sonnet` | Read-only codebase/domain research that grounds a `grill-me-for-spec` session. Returns a briefing, not file dumps. |
-| `issue-implementer` | `opus` | Implements **one** tracked issue in its own git worktree and commits it on its own branch. Spawn several in parallel. |
+| `issue-implementer` | `opus` | Implements **one** tracked issue, editing the session's working tree in place on the main-issue branch and handing the slice back uncommitted. Dispatched one at a time, never in parallel. |
 | `standards-reviewer` | `opus` | Axis A of `testing`: static-analysis gate + code-smell review of the whole codebase. |
 | `spec-reviewer` | `sonnet` | Axis B of `testing`: the diff against its acceptance criteria. |
 | `test-runner` | `haiku` | Axis C of `testing`: run the suite, report green/red. |
@@ -57,14 +57,16 @@ delegated — it would invent the answers instead. That means the grilling in
 question in AGENTS.md's git rules, and all triage decisions stay in the main
 conversation by design, not by omission.
 
-### Running implementers in parallel
+### Running implementers sequentially
 
-`tracker.py next --all` prints the actionable frontier — every unblocked
-`ready-for-agent` leaf, hence a set that is independent by construction. The main
-conversation dispatches one `issue-implementer` per id, each in its own worktree,
-and merges the branches afterwards. The dispatcher must not claim the issues
-itself: a worktree branches from the integration branch and would never see an
-uncommitted claim. See `skills/issue-tracker/workflows/implement.md`.
+Child-issues are implemented **one at a time, in dependency order** — never in
+parallel. `tracker.py next` returns the next unblocked `ready-for-agent` leaf;
+the main conversation dispatches a single `issue-implementer` for it, and only
+dispatches the next once that one returns. Each implementer edits the session's
+working tree in place on the main-issue branch and hands its slice back
+uncommitted — there is no per-child worktree and no branch to merge. (`next
+--all` still lists the whole unblocked frontier, but as an overview, not a batch
+to run at once.) See `skills/issue-tracker/workflows/implement.md`.
 
 ### Closing an issue that will never be built
 

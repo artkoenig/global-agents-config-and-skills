@@ -65,7 +65,7 @@ structure and [reference/states.md](reference/states.md) for the state machine.
 | `show ID` | Print an issue's markdown. |
 | `set-status ID STATE [--reason "why"]` | Move an issue to a new state. Invalid transitions and resolving a parent with open children are rejected. `--reason` is required for `superseded` and is recorded as a comment. |
 | `comment ID "text"` | Append a note under `## Comments`. |
-| `next [--parent ID] [--all]` | Print the next actionable **child-issue** (a leaf): `ready-for-agent`, all sibling blockers closed. Scope to one main-issue with `--parent`. With `--all`, print every such issue — the parallel-safe frontier, since blocked issues are excluded by construction. |
+| `next [--parent ID] [--all]` | Print the next actionable **child-issue** (a leaf): `ready-for-agent`, all sibling blockers closed. Scope to one main-issue with `--parent`. With `--all`, print every such issue — the full actionable frontier. Child-issues are implemented one at a time in dependency order, so the loop normally consumes them via plain `next`; `--all` is just an overview of what is unblocked. |
 | `selftest` | Run the engine's built-in tests. |
 
 ## When to use which workflow
@@ -77,10 +77,11 @@ their own guides — read them when you reach that step:
   (PRD) must be turned into implementable, vertically-sliced child-issues, follow
   [workflows/decompose.md](workflows/decompose.md).
 - **Implementing tracked issues** — to work through the open issues, follow
-  [workflows/implement.md](workflows/implement.md). It covers both parallel
-  dispatch to `issue-implementer` subagents (preferred — the implementation stays
-  out of the main conversation) and the sequential claim → implement → resolve
-  loop as a fallback.
+  [workflows/implement.md](workflows/implement.md). Child-issues are implemented
+  **sequentially, one at a time** in dependency order: preferably by dispatching
+  one `issue-implementer` subagent per slice (so the implementation stays out of
+  the main conversation), or inline as a fallback. Implementers never run in
+  parallel.
 - **Resolving an implemented issue** — when an issue has been implemented and its
   tests pass, follow [workflows/resolve.md](workflows/resolve.md) to record the
   outcome and set `resolved`.
@@ -105,7 +106,7 @@ python3 <skill>/scripts/tracker.py set-status "$ID" claimed
 python3 <skill>/scripts/tracker.py set-status "$ID" resolved
 ```
 
-**See everything that could be worked in parallel right now**
+**See the whole actionable frontier (everything currently unblocked)**
 ```bash
 python3 <skill>/scripts/tracker.py next --all
 ```

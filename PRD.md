@@ -34,12 +34,16 @@ Der Workflow wird umgebaut und durchgängig testbar gemacht. Zwei orthogonale
 Änderungen:
 
 1. **Umbau der Issue-/Branch-Logik.** Genau eine Arbeitseinheit = ein
-   Top-Level-Issue („Haupt-Issue") = ein Branch `issue/<slug>` = ein Worktree =
-   ein Pull Request. Mehrere Haupt-Issues laufen lokal **gleichzeitig**, jedes
-   in einer eigenen Claude-Code-Session in einem eigenen Worktree unter
-   `.worktrees/`. Kind-Issues eines Haupt-Issues laufen **innerhalb** seiner
-   Session parallel (issue-implementer, isolation worktree) und mergen
-   sequenziell in Abhängigkeitsreihenfolge in den Haupt-Issue-Branch.
+   Top-Level-Issue („Haupt-Issue") = ein Branch `issue/<slug>` = ein Pull
+   Request (und, nur lokal, = ein Worktree). Mehrere Haupt-Issues laufen lokal
+   **gleichzeitig**, jedes in einer eigenen Claude-Code-Session in einem eigenen
+   Worktree unter `.worktrees/`. Kind-Issues eines Haupt-Issues werden
+   **innerhalb** seiner Session **sequenziell, eines nach dem anderen** in
+   Abhängigkeitsreihenfolge direkt auf dem Haupt-Issue-Branch implementiert
+   (issue-implementer, ohne eigenen Worktree, kein Merge) — nie parallel.
+   Cloud-Sessions (`CLAUDE_CODE_REMOTE=true`) arbeiten ganz ohne Worktree
+   direkt im eigenen geklonten Repository, das die Kapselung bereits
+   garantiert; der `worktree_guard.py` ist dort ein No-op.
 
 2. **Selbst-testender Regelapparat.** Jede Regel wird einem von zwei
    Teststilen zugeordnet:
@@ -90,20 +94,25 @@ Verifikation**. Geändert wird die Issue-/Branch-Logik dazwischen.
 2. Als Maintainer ist Issue-Tracking für **jede** nicht-triviale Codeänderung
    verpflichtend — das PRD wird immer in ein Haupt-Issue plus Kind-Issues
    zerlegt, ohne vorherige Nachfrage.
-3. Als Maintainer gilt genau **1 Haupt-Issue = 1 Branch = 1 Worktree = 1 Pull
-   Request**. Der PR wird erst eröffnet, wenn alle Kind-Issues geschlossen
-   sind — `resolved`, oder `superseded` für ein nie umgesetztes Kind-Issue.
+3. Als Maintainer gilt genau **1 Haupt-Issue = 1 Branch = 1 Pull Request**
+   (und, nur in lokalen Sessions, = 1 Worktree). Der PR wird erst eröffnet,
+   wenn alle Kind-Issues geschlossen sind — `resolved`, oder `superseded` für
+   ein nie umgesetztes Kind-Issue.
 4. Als Maintainer kann ich **mehrere Haupt-Issues gleichzeitig lokal**
    bearbeiten: jedes in einem eigenen Worktree unter `.worktrees/`, gefahren
    von einer eigenen, unabhängigen Claude-Code-Session. Es gibt keine
    gemeinsame orchestrierende Instanz zwischen ihnen; nur das geteilte `.git`
-   verbindet sie. `.worktrees/` ist in `.gitignore` eingetragen.
+   verbindet sie. `.worktrees/` ist in `.gitignore` eingetragen. In
+   **Cloud-Sessions** (`CLAUDE_CODE_REMOTE=true`) entfällt der Worktree ganz:
+   die Session läuft im eigenen geklonten Repository, das die Kapselung
+   garantiert, und arbeitet direkt auf dem `issue/<slug>`-Branch.
 5. Als Maintainer werden Kind-Issues eines Haupt-Issues **innerhalb** seiner
-   Session parallel implementiert (issue-implementer, isolation worktree) und
-   **sequenziell in Abhängigkeitsreihenfolge** (aus `tracker.py`) in den
-   Haupt-Issue-Branch gemerged. Nach jedem Merge wird der Kind-Worktree
-   entfernt (`git worktree remove`); es bleiben keine dauerhaften
-   Kind-Branches.
+   Session **sequenziell, eines nach dem anderen** in Abhängigkeitsreihenfolge
+   (aus `tracker.py`, numerische Präfixordnung) direkt auf dem
+   Haupt-Issue-Branch implementiert — nie parallel. Der issue-implementer läuft
+   **ohne eigenen Worktree**: er editiert den Arbeitsbaum der Session in-place
+   und übergibt jede Scheibe **uncommitted** zurück. Es gibt keinen
+   Kind-Worktree und keinen Kind-Branch zum Mergen.
 6. Als Maintainer darf eine **triviale** Änderung ohne Haupt-Issue passieren.
    Trivial ist deterministisch definiert: **genau 1 geänderte Datei UND
    (≤ 1 geänderte Zeile ODER Dateiendung ∈ {`.md`, `.json`, `.yaml`, `.yml`,
@@ -179,9 +188,9 @@ kommt hinzu:
 
 1. `grill-me-for-spec` — erzeugt PRD, legt danach ohne Nachfrage das Haupt-Issue
    an (inkl. `type`-Feld).
-2. `issue-tracker` — neue 1:1-Logik (Haupt-Issue ↔ Branch ↔ Worktree ↔ PR),
-   sequenzieller Merge in Abhängigkeitsreihenfolge, `git worktree remove` nach
-   Merge, Trivial-Ausnahme.
+2. `issue-tracker` — neue 1:1-Logik (Haupt-Issue ↔ Branch ↔ PR; Worktree nur
+   lokal), Kind-Issues **sequenziell** in Abhängigkeitsreihenfolge direkt auf
+   dem Haupt-Issue-Branch (kein Kind-Worktree, kein Merge), Trivial-Ausnahme.
 3. `engineering-principles` — inhaltlich unverändert, bekommt Behavioral Eval.
 4. `testing` — unverändert (Produktcode-Verifikation, getrennt vom
    Regel-Test-Framework).
@@ -196,7 +205,8 @@ kommt hinzu:
 
 - `AGENTS.md` — „Git & Version Control" und „Worktree Isolation" neu gefasst
   (einziges Branch-Pattern `issue/<slug>`, verpflichtendes Issue-Tracking,
-  Trivial-Ausnahme, `.worktrees/`-Layout, zweistufige Worktree-Struktur);
+  Trivial-Ausnahme, `.worktrees/`-Layout, Worktree-Struktur einstufig und
+  **nur lokal** — Cloud-Sessions ohne Worktree, Guard dort No-op);
   „Cloud Session Bootstrap Trigger" erweitert (setzt `core.hooksPath`);
   Engineering-Prinzipien-Trigger, Delegation und Nachfragepflicht bleiben und
   werden je an einen Behavioral Eval gekoppelt.
@@ -274,10 +284,10 @@ kommt hinzu:
 
 ## Offene Punkte (in der Zerlegung zu klären)
 
-- **Placement der Kind-Worktrees**, wenn die Session-cwd selbst schon ein
-  Worktree unter `.worktrees/` ist (Vermeidung verschachtelter
-  `.worktrees/.worktrees/`). Empfehlung: alle Worktrees flach gegen das
-  gemeinsame `.git` registrieren; genaue Pfadkonvention in der Zerlegung fixieren.
+- **Kind-Worktrees entfallen.** Kind-Issues werden sequenziell direkt auf dem
+  Haupt-Issue-Branch implementiert; es gibt keinen Kind-Worktree mehr, also auch
+  keine Verschachtelungsfrage. Für Haupt-Issue-Worktrees gilt weiterhin: flach
+  gegen das gemeinsame `.git` registrieren, keine `.worktrees/.worktrees/`.
 - **Pass-Schwelle** der Evals: Vorschlag `pass_rate == 1.0` erforderlich; ob
   einzelne Evals eine abweichende Schwelle deklarieren dürfen, offen.
 - **Manuelle Aufrufschnittstelle** (Regel 11): CLI-Name/Flags des Skripts.

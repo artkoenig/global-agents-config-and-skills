@@ -68,19 +68,21 @@ to get it off the board — that would record it as implemented. See
 4. **Commit the changes.** Commit the code together with this issue's status
    change, so the tracker state and the work it describes stay in one commit.
 
-   *Who commits depends on where you are*, per AGENTS.md's git rules:
-   - Working **in your own worktree** (the `issue-implementer` subagent): commit
-     without asking. Your worktree cannot be handed back otherwise. Never push.
-   - Working **in the user's checkout**: do not commit on your own — **except**
-     at the main-issue resolution gate, where reaching `resolved` authorizes
-     committing, pushing, and opening the PR without asking (step 5). For a
-     resolved **child**-issue whose siblings are still open, report it and let
-     the user decide when to commit. But when the child being resolved is the
-     **last** open issue of the main-issue's subtree, its resolution commit is
-     already part of the gate sequence — commit it without asking and proceed
-     straight through steps 2–5. Waiting for the user here would stall the gate
-     right before it fires: the main-issue can never reach `resolved`, and the
-     automatic PR that this gate exists to produce is never opened.
+   The `issue-implementer` subagent **never commits** — it edits the working
+   tree in place and hands its slice back uncommitted (AGENTS.md, git rules), so
+   committing is always the main conversation's job, in its own checkout, where
+   the "never commit automatically" rule applies:
+   - For a **child**-issue resolved while siblings are still open: do not commit
+     on your own — report it and let the user decide when to commit. The slice
+     stays in the working tree and accumulates with the others on the branch.
+   - **Except** at the main-issue resolution gate: when the child being resolved
+     is the **last** open issue of the subtree, its resolution is part of the
+     gate sequence — commit the accumulated work without asking and proceed
+     straight through steps 2–5. Reaching `resolved` authorizes committing,
+     pushing, and opening the PR without asking (step 5). Waiting for the user
+     here would stall the gate right before it fires: the main-issue can never
+     reach `resolved`, and the automatic PR that this gate exists to produce is
+     never opened.
 
 5. **Open the pull request — automatically (main-issue only).** Once a
    main-issue is `resolved` and committed, push its `issue/<slug>` branch and
