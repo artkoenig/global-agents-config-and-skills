@@ -1,0 +1,38 @@
+{
+  "agent_name": "solution-architect",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Set up a main-issue for a 'checkout redesign' (type feature) in our tracker and break it into three child-issues — cart schema, cart API (blocked by the schema), and cart UI (blocked by the API) — all ready-for-agent. Then take the whole main-issue forward to implementation on its branch.",
+      "expected_output": "Once the main-issue is decomposed, and BEFORE dispatching any issue-implementer, the assistant runs the module-level planning step: it delegates to the solution-architect subagent to produce a temporary design.md (module map + shared contracts) and gut-checks that plan with a clean-room-review, then proceeds to sequential implementation. It does not jump straight from the decomposed child-issues to implementers.",
+      "expectations": [
+        "Before any issue-implementer is dispatched, the assistant ran the module-level planning step — an Agent/Task call targeting solution-architect (or an explicit run of the architect workflow) — rather than going straight from the decomposed child-issues to implementation.",
+        "The architect's output is treated as a temporary design.md (a module-level plan the implementers read), NOT as edits to the child issue.md files, which stay solution-free (behaviour, not a technical solution).",
+        "The plan is gut-checked with an independent clean-room-review before implementation begins, not merely accepted as written.",
+        "The planning step runs once for the whole main-issue, up front — not once per child-issue, and the architect itself writes no implementation code."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We've got the `checkout-redesign` main-issue decomposed into its child-issues and it's ready to build. Produce the module-level implementation plan for it before we start coding.",
+      "expected_output": "The assistant delegates to the solution-architect subagent, which grounds itself in the existing code, CONTEXT.md and ADRs and writes a temporary docs/issues/<main-id>/design.md — module map, public contracts, slice-to-module mapping — then reports a summary plus any ADR candidates. It only plans: no code changes, no edits to the child issue.md files, and no tracker status/lifecycle changes.",
+      "expectations": [
+        "The module plan was produced by delegating to the solution-architect subagent (an Agent/Task call), not written inline in the main conversation.",
+        "The plan lives in a temporary design.md at the main-issue level, distinct from the child issue.md files — which are not edited and stay solution-free.",
+        "The architect wrote no implementation code and made no tracker lifecycle changes (no set-status/claim/resolve, no `tracker.py next`) — it only planned.",
+        "The plan is a module-level design (module boundaries + shared contracts), not a line-by-line file/code plan, and is grounded in the actual repository (CONTEXT.md/ADRs/existing modules) rather than invented in a vacuum."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The `password-reset-timeout` main-issue's spec collapsed into a single slice when we decomposed it — it has no child-issues, just its own acceptance criteria, and it's ready-for-agent. Please get it built.",
+      "expected_output": "The assistant recognizes this is a single-slice main-issue with no child-issues, so there are no cross-slice module boundaries to agree up front. It SKIPS the module-level planning step (does not dispatch solution-architect and does not create a design.md) and proceeds directly toward implementing the single-slice main-issue on its own branch.",
+      "expectations": [
+        "The assistant identified this as a single-slice main-issue (no child-issues) and did NOT run the module-level planning step / did not dispatch the solution-architect for it.",
+        "No spurious design.md was created for the single slice.",
+        "It proceeded directly toward implementing the main-issue id itself (the single-slice path), rather than inserting an architect/design.md step that adds no value here.",
+        "Its reasoning is sound: with only one slice there are no cross-slice module boundaries to agree in advance, which is exactly when the architect step is skipped."
+      ]
+    }
+  ]
+}
