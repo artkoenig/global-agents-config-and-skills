@@ -98,13 +98,13 @@ worktree branches to merge.
 Commits & pushes, in your own checkout:
 - Never commit or push automatically — only when I explicitly ask.
 - **Equal-rank exception, not a footnote: the main-issue resolution gate.**
-  The moment the last child-issue of a main-issue closes and `testing` is
+  The moment the last child-issue of a main-issue closes and `review` is
   green, the prohibition above stops applying to that main-issue. From there,
   child-resolution commit → main-issue `resolved` → commit → push → open PR is
   **one uninterrupted sequence — no question to me anywhere in it**. Stopping
   to ask "soll ich den PR öffnen?" at this point is a rule violation, not
   caution: this gate exists precisely so the sequence completes while I'm
-  away. The only two legitimate halts are a blocking finding from `testing`
+  away. The only two legitimate halts are a blocking finding from `review`
   and a genuinely open scope decision I haven't answered yet.
 - Never add a `Co-Authored-By:` trailer of any kind. This is a
   single-maintainer repo with no allow-list; the `pre-push` hook rejects any
@@ -248,8 +248,9 @@ than files, logs, or diffs.
   single implementer for it; when it returns, dispatch the next. Implementers
   run **sequentially, never in parallel** — each edits the session's working
   tree in place on the main-issue branch and hands its slice back.
-- **Verification** → the `testing` skill, which fans out to `standards-reviewer`,
-  `spec-reviewer` and `test-runner`.
+- **Verification** → the `review` skill, which fans out to `standards-reviewer`,
+  `spec-reviewer`, `test-runner`, `docs-reviewer` and — via `clean-room-review` —
+  `clean-room-reviewer`.
 
 Do not delegate anything that has to ask me something — subagents have no way to
 put a question to me and will invent the answer instead. The grilling in

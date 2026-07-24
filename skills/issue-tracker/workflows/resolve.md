@@ -33,23 +33,24 @@ to get it off the board — that would record it as implemented. See
    nested inside another issue. Do not test this by checking whether it has
    child-issues: a main-issue whose specification collapsed into a single slice
    (see decompose.md's "single slice: fold into the main-issue") has none of its
-   own, and skipping the four-axis check for it would be wrong — it is still the
+   own, and skipping the five-axis check for it would be wrong — it is still the
    main-issue, and still the one whose subtree gate opens the PR.
 
    If it is a main-issue, its whole subtree (itself, plus any child-issues) is
-   now implemented, and that is exactly the point to run the `testing` skill
-   (four-axis verification), once per main-issue, not per child-issue. It should
+   now implemented, and that is exactly the point to run the `review` skill
+   (five-axis review), once per main-issue, not per child-issue. It should
    already be `claimed` (see [implement.md](implement.md) — a main-issue is
    claimed the moment work starts on any of its child-issues). Pass the
-   main-issue's own issue directory as the acceptance-criteria source so Axis B
-   reviews the diff against its spec:
+   main-issue's own issue directory as the acceptance-criteria source: Axis B
+   reviews the diff against its spec, and Axis E (Clean-Room) draws that same
+   issue's description for the problem statement of its blind brief:
    ```
-   /testing <issue-tracker-dir>/<issue-id>
+   /review <issue-tracker-dir>/<issue-id>
    ```
    If it surfaces blocking findings, fix them (or hand them to the user) and
-   re-run `testing` — do not resolve a main-issue that hasn't passed
+   re-run `review` — do not resolve a main-issue that hasn't passed
    verification. Child-issues skip this step entirely: they never run the full
-   four-axis `testing` skill. During implementation, `issue-implementer`'s own
+   five-axis `review` skill. During implementation, `issue-implementer`'s own
    Verify step runs only the test suite (via the `test-runner` subagent) against
    that single vertical slice — the Standards and Spec axes run just once, here
    at the main-issue level.
@@ -90,7 +91,7 @@ to get it off the board — that would record it as implemented. See
    standing authorization for this (AGENTS.md, "Commits & pushes"). Steps 3–5
    plus the last child's resolution commit (step 4) form one uninterrupted
    sequence: do not stop between them to ask whether to commit, push, or open
-   the PR. The only legitimate halts are a blocking `testing` finding (step 2)
+   the PR. The only legitimate halts are a blocking `review` finding (step 2)
    and a scope decision the user has left genuinely open. Push every
    local commit first, or the PR misses unpushed work. One PR for the whole
    main-issue; the merge stays manual, and the worktree teardown waits for it. A
