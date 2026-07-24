@@ -135,8 +135,10 @@ the web, `CLAUDE_CODE_REMOTE=true`) run in their own freshly cloned repository,
 which *is* the isolation — there is no shared checkout for one session's edits
 to disturb — so they do no worktree work at all: they operate directly on the
 `issue/<slug>` branch in that clone. The `worktree_guard.py` hook detects the
-remote flag and no-ops there (it stays installed so local sessions of the same
-repo are still covered). Everything below is about local sessions.
+remote session — the `CLAUDE_CODE_REMOTE` flag, or any other `CLAUDE_CODE_REMOTE_*`
+marker the remote runner sets — and no-ops there (it stays installed so local
+sessions of the same repo are still covered). Everything below is about local
+sessions.
 
 Every local work session runs in an isolated git worktree, entered at the
 **start** of the session — as soon as it's clear the session will touch the
