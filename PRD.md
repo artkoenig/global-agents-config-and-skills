@@ -87,8 +87,9 @@ Verifikation**. Geändert wird die Issue-/Branch-Logik dazwischen.
 ### Issue-/Branch-Logik
 
 1. Als Maintainer entsteht jeder Branch aus genau einem Top-Level-Issue und
-   heißt `issue/<slug>`. `issue/<slug>` ist das **einzige** gültige
-   Branch-Pattern; die Präfixe `feature|fix|refactor|chore` entfallen. Die
+   heißt idealerweise `issue/<slug>`. `issue/<slug>` ist das **vorgesehene**
+   Branch-Pattern (nicht mehr erzwungen, siehe 7); die Präfixe
+   `feature|fix|refactor|chore` entfallen. Die
    Kategorie wandert in ein `type`-Feld der `issue.md`
    (`feature|fix|refactor|chore`).
 2. Als Maintainer ist Issue-Tracking für **jede** nicht-triviale Codeänderung
@@ -121,7 +122,12 @@ Verifikation**. Geändert wird die Issue-/Branch-Logik dazwischen.
 
 ### Deterministische Durchsetzung
 
-7. Als Maintainer wird jeder Branch-Name gegen `^issue/[a-z0-9-]+$` geprüft.
+7. Branch-Namen werden **nicht** erzwungen. `issue/<slug>` bleibt die
+   empfohlene Konvention, aber der `pre-push`-Hook lehnt keinen Namen mehr
+   ab: Cloud-Sessions (Claude Code on the web) laufen auf einem
+   plattformseitig vergebenen Branch (z. B. `claude/<slug>`), den die
+   Session nicht umbenennen kann — ihn zu blockieren würde jeden
+   Remote-Push verhindern.
 8. Als Maintainer wird jeder Push, dessen Ziel-Ref `main` ist, abgelehnt —
    `main` wird nur über einen GitHub-PR-Merge aktualisiert, nie durch lokalen
    Push. (Push-Ziel-basiert, nicht Commit-Form-basiert.)

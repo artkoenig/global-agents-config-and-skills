@@ -62,12 +62,14 @@ revisit once work is underway. In your own checkout:
   completed PR, ask me whether to start a new branch instead of reusing the
   old one.
 
-Branch naming: every work branch is `issue/<slug>` and maps 1:1 to exactly one
-top-level issue ("main-issue"). This is the **only** valid branch pattern — the
-old `feature|fix|refactor|chore` prefixes are gone; that category now lives in a
-`type` field inside the issue's `issue.md` (`feature|fix|refactor|chore`). The
-`pre-push` hook rejects any branch name that doesn't match `^issue/[a-z0-9-]+$`
-(see `scripts/git_workflow_rules.py`).
+Branch naming: the recommended name for a work branch is `issue/<slug>`,
+mapping 1:1 to exactly one top-level issue ("main-issue"). The old
+`feature|fix|refactor|chore` prefixes are gone; that category now lives in a
+`type` field inside the issue's `issue.md` (`feature|fix|refactor|chore`). This
+is a convention, not a gate: the `pre-push` hook no longer enforces a branch
+name. Cloud (Claude Code on the web) sessions run on a platform-assigned branch
+(e.g. `claude/<slug>`) that the session cannot rename, so enforcing `^issue/`
+would reject every remote push (see `scripts/git_workflow_rules.py`).
 
 The relationship is strict: **1 main-issue = 1 branch `issue/<slug>` = 1 pull
 request** — and, in local sessions only, = 1 worktree (see "Worktree
