@@ -33,13 +33,14 @@ below.
 
 ## The subagents
 
-`agents/` holds seven subagents whose job is to keep the main conversation's
+`agents/` holds eight subagents whose job is to keep the main conversation's
 context small: the expensive, read-heavy work happens in their context and only a
 summary comes back.
 
 | Subagent | Model | Role |
 | --- | --- | --- |
 | `spec-researcher` | `sonnet` | Read-only codebase/domain research that grounds a `grill-me-for-spec` session. Returns a briefing, not file dumps. |
+| `solution-architect` | `opus` | Plans the module-level implementation of one decomposed main-issue into a temporary `design.md` (module map + shared contracts), so the sequential slices build against agreed boundaries. Runs once, after decompose, before implement. |
 | `issue-implementer` | `opus` | Implements **one** tracked issue, editing the session's working tree in place on the main-issue branch and handing the slice back uncommitted. Dispatched one at a time, never in parallel. |
 | `standards-reviewer` | `opus` | Axis A of `review`: static-analysis gate + code-smell review of the whole codebase. |
 | `spec-reviewer` | `sonnet` | Axis B of `review`: the diff against its acceptance criteria. |
@@ -69,6 +70,21 @@ working tree in place on the main-issue branch and hands its slice back
 uncommitted — there is no per-child worktree and no branch to merge. (`next
 --all` still lists the whole unblocked frontier, but as an overview, not a batch
 to run at once.) See `skills/issue-tracker/workflows/implement.md`.
+
+### Planning the module structure once
+
+Because child-issues are implemented sequentially and in isolation, each
+implementer would otherwise invent its own module boundaries and shared types,
+and the slices would drift. So after a spec is decomposed and before any slice is
+built, the `solution-architect` runs **once per main-issue** and writes the
+module-level plan to a **temporary** `docs/issues/<main-id>/design.md`: a module
+map, the public contracts the slices exchange, and the slice-to-module mapping.
+The plan is gut-checked by an independent `clean-room-review` (the same blind
+design that is Axis E of `review`, here run *before* implementation on the
+problem alone), and each `issue-implementer` reads it. It is a working artifact,
+not part of the deliverable: it is deleted at the main-issue resolution gate so it
+never lands in the PR — which is why it does not clash with the rule that issue
+docs stay solution-free. See `skills/issue-tracker/workflows/architect.md`.
 
 ### Closing an issue that will never be built
 

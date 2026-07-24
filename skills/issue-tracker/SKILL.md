@@ -76,6 +76,12 @@ their own guides — read them when you reach that step:
 - **Breaking a specification into issues** — when a main-issue's specification
   (PRD) must be turned into implementable, vertically-sliced child-issues, follow
   [workflows/decompose.md](workflows/decompose.md).
+- **Planning a main-issue's implementation** — after decomposing and before
+  implementing, plan the shared module structure once with the
+  [workflows/architect.md](workflows/architect.md) guide: a `solution-architect`
+  writes a temporary `design.md`, gut-checked by a clean-room review, so the
+  sequential slices are built against agreed module boundaries. Skipped for a
+  single-slice main-issue.
 - **Implementing tracked issues** — to work through the open issues, follow
   [workflows/implement.md](workflows/implement.md). Child-issues are implemented
   **sequentially, one at a time** in dependency order: preferably by dispatching

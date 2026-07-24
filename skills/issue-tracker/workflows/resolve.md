@@ -85,6 +85,17 @@ to get it off the board — that would record it as implemented. See
      reach `resolved`, and the automatic PR that this gate exists to produce is
      never opened.
 
+   **At the main-issue gate, first delete the temporary plan.** If the
+   [architect workflow](architect.md) wrote a `docs/issues/<main-id>/design.md`,
+   remove it **before** staging the commit — it is a working artifact that must
+   never enter the PR:
+   ```bash
+   rm -f "<issue-tracker-dir>/<main-issue-id>/design.md"
+   ```
+   The five-axis `review` in step 2 has already run against the plan-informed
+   diff, so the plan has served its purpose by now. Then stage and commit the
+   accumulated work.
+
 5. **Open the pull request — automatically (main-issue only).** Once a
    main-issue is `resolved` and committed, push its `issue/<slug>` branch and
    open the pull request **without a separate ask** — reaching `resolved` is the

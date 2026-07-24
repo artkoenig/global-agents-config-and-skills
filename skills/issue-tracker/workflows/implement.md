@@ -13,6 +13,14 @@ slice is built directly in the session's working tree on the main-issue branch
 (locally inside its worktree, in cloud sessions directly in the per-session
 clone), and the next slice starts only once the current one is done.
 
+Before this workflow runs, the [architect workflow](architect.md) has usually
+produced a temporary `docs/issues/<main-id>/design.md`: the module-level plan the
+slices are built against. Each `issue-implementer` reads it, so the sequentially
+built slices share module boundaries and contracts instead of each inventing
+their own. It is a working artifact, not part of the deliverable — it is deleted
+at the resolution gate (step 3) so it never lands in the PR. A single-slice
+main-issue usually has none (the architect step is skipped for it).
+
 A child-issue that turns out never to be needed — its work is already covered
 elsewhere, or the requirement fell away mid-implementation — is not left hanging
 and not faked as implemented. Close it as `superseded` with a mandatory reason:
@@ -77,6 +85,9 @@ step 3.
 
 - **issue_id** — the id from `next`.
 - **tracker_script** — the resolved path to `scripts/tracker.py`.
+- **design_path** (if the architect step ran) — the path to the main-issue's
+  `design.md`, so the implementer builds its slice against the shared module
+  boundaries and contracts.
 
 The implementer claims the child itself, implements only that slice, runs the
 test suite via `test-runner`, and resolves it. Do not restate its rules; its
@@ -113,9 +124,11 @@ If every child-issue is now closed (`resolved`, or `superseded` for a slice that
 turned out not to be needed), follow [resolve.md](resolve.md) on the
 **main-issue id** — it was already claimed in step 1, so this runs the full
 five-axis `review` skill, resolves the main-issue, then automatically commits,
-pushes and opens the PR (resolve.md steps 4–5). That is where the accumulated
-child work is committed. One PR for the whole main-issue. If child-issues remain
-open (blocked, or awaiting info), leave the main-issue alone; it isn't done yet.
+pushes and opens the PR (resolve.md steps 4–5). resolve.md deletes the temporary
+`design.md` before that commit, so the plan never lands in the PR. That is where
+the accumulated child work is committed. One PR for the whole main-issue. If
+child-issues remain open (blocked, or awaiting info), leave the main-issue alone;
+it isn't done yet.
 
 ### 4. Report
 

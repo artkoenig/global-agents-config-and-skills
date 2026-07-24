@@ -144,9 +144,15 @@ child-issues, so it is itself a leaf: an unscoped `next` (run without
 
 Do not write implementation code here. Tell the user the breakdown is complete.
 
-- **More than one slice**: implementation proceeds via the
-  [implement workflow](implement.md), which picks up child-issues with `next`.
-- **A single slice folded into the main-issue (Step 3a)**: implementation
+- **More than one slice**: before implementation, plan the shared module
+  structure once via the [architect workflow](architect.md) — it produces a
+  temporary `design.md` and gut-checks it with a clean-room review, so the
+  sequential slices are built against agreed module boundaries. Implementation
+  then proceeds via the [implement workflow](implement.md), which picks up
+  child-issues with `next`.
+- **A single slice folded into the main-issue (Step 3a)**: there are no
+  cross-slice boundaries to agree, so the architect step is usually skipped (see
+  [architect.md](architect.md#when-to-run-it--and-when-to-skip)). Implementation
   proceeds directly on the main-issue id — see implement.md's
   [single-slice section](implement.md#c-single-slice-main-issue-no-child-issues).
 

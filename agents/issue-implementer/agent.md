@@ -19,6 +19,9 @@ The caller has already decided what you work on. Your prompt contains:
 
 - **issue_id** (required) — the single issue to implement, e.g. `01-checkout/02-cart-api`.
 - **tracker_script** — path to the `issue-tracker` skill's `scripts/tracker.py`.
+- **design_path** (optional) — path to the main-issue's `design.md`, the
+  module-level plan your slice must fit (see step 2). Absent when no plan was
+  produced.
 
 If **issue_id** is missing, stop immediately and say so. Do not pick one yourself.
 
@@ -53,6 +56,15 @@ that — do not force it.
 ### 2. Implement
 Implement **only** what this issue specifies. Do not anticipate other issues
 (YAGNI) — they are the caller's to schedule, not yours to pre-build.
+
+If **design_path** is set, **read it first**. It is the module-level plan for the
+whole main-issue: the module boundaries and the shared contracts (interfaces,
+types, data shapes) your slice exchanges with the others. Build your slice to fit
+it — honour those boundaries and contracts so it composes with the slices built
+before and after yours, which you never see. The plan governs **how** your slice
+fits the whole; the issue's own `## Acceptance Criteria` remain **what** you must
+satisfy. If the plan and your issue genuinely conflict, do not silently pick one —
+stop and report it, like any under-specified issue (below).
 
 The `engineering-principles` skill is already in your context. Follow it; it is
 not optional. In particular: meaningful names, single responsibility, no magic

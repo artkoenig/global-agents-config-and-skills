@@ -247,6 +247,11 @@ than files, logs, or diffs.
 
 - **Codebase research** (during `grill-me-for-spec`, or any "how does this work
   today?" question spanning more than a handful of files) → `spec-researcher`.
+- **Module-level planning of a decomposed main-issue** (once, after decompose and
+  before implement) → `solution-architect`. It writes a temporary `design.md`
+  (module map + shared contracts) that the implementers build against; gut-check
+  it with `clean-room-review` before implementing. Skip it for a single-slice
+  main-issue.
 - **Implementing a tracked issue** → `issue-implementer`, one issue at a time.
   Use `tracker.py next` to get the next actionable child-issue and dispatch a
   single implementer for it; when it returns, dispatch the next. Implementers
