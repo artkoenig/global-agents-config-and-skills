@@ -233,6 +233,11 @@ than files, logs, or diffs.
   once; each works in its own worktree and returns a branch to merge.
 - **Verification** → the `testing` skill, which fans out to `standards-reviewer`,
   `spec-reviewer` and `test-runner`.
+- **Independent second opinion** (an unbiased "how would you do it?" on a design
+  or architecture decision, uncontaminated by the status quo) → the
+  `clean-room-review` skill, which drives the `clean-room-reviewer` subagent. The
+  reviewer has no repository access by design; the skill's question/answer loop
+  and neutrality rules are the single source of truth for how it runs.
 
 Do not delegate anything that has to ask me something — subagents have no way to
 put a question to me and will invent the answer instead. The grilling in
