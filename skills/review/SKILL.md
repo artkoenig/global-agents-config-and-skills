@@ -1,65 +1,46 @@
 ---
 name: review
-description: Performs an agnostic five-axis review of the current changes - Standards (static analysis plus code-smell review over the whole codebase), Specification (review of the diff against optional acceptance criteria), Tests (running the local test suite), Docs (review of the diff against the repository's documentation), and Clean-Room (an independent expert re-designs the solution from the problem and the raw data alone, to challenge the chosen implementation and domain modeling).
+description: Performs an agnostic five-axis review of the current changes - Standards (static analysis plus code-smell review over the whole codebase), Specification (review of the diff against optional acceptance criteria), Tests (running the local test suite), Docs (review of the diff against the repository's documentation), and Design-Conformance (review of the diff against a design.md module plan, when one exists).
 user-invocable: true
 ---
 
 # Review and Verification
 
-Use this skill to secure the current changes with a five-axis review. Each axis answers a different question and operates on a different scope. Four of them run as dedicated, read-only subagents whose analysis, logs and file reads never enter this conversation; the fifth (Clean-Room) is driven from this conversation, because it runs a question/answer loop:
+Use this skill to secure the current changes with a five-axis review. Each axis answers a different question and operates on a different scope. All of them run as dedicated, read-only subagents whose analysis, logs and file reads never enter this conversation — fire-and-forget, with no question/answer loop; two of them (Specification and Design-Conformance) run only when their source is available:
 
 - **Axis A - Standards** (`standards-reviewer` subagent): "Is the code healthy?" Static analysis plus a code-smell review over the **entire codebase**.
 - **Axis B - Specification** (`spec-reviewer` subagent, optional): "Did we build the right thing?" Reviews the **diff** against a specification. Runs only when a specification source is available.
 - **Axis C - Tests** (`test-runner` subagent): "Does it still work?" Runs the project's **test suite**.
 - **Axis D - Docs** (`docs-reviewer` subagent): "Is the documentation still consistent with what changed?" Reviews the **diff** against the repository's own documentation. Always runs; it needs no specification source. Its report is written in German by design.
-- **Axis E - Clean-Room** (`clean-room-reviewer` subagent, via the `clean-room-review` workflow): "Did we build it the right **way**?" An external expert who never sees the code re-designs a solution from the problem and the **raw data alone**; its blind proposal is then reconciled against the actual implementation. This is the one axis that can rightly challenge the chosen approach — and the domain modeling itself — instead of measuring the diff against them. Always runs.
+- **Axis E - Design-Conformance** (`design-reviewer` subagent, optional): "Did we build it the **way** we planned?" Reviews the **diff** against a `design.md` module plan — did the implementation honour the planned module boundaries and shared contracts? Runs only when a design plan is available (e.g. a multi-slice main-issue where the architect step produced one); with no plan it is skipped, like Axis B without a spec. The plan's soundness was already challenged by a clean-room gut-check in the architect workflow *before* implementation, so here Axis E just measures conformance to it.
 
-Each subagent carries its own model and tool restrictions, so the axes cost what they are worth: `opus` for the code-smell judgment of Axis A, `sonnet` for the diff-vs-spec comparison of Axis B, `haiku` for running a command in Axis C, `sonnet` for the documentation-drift review of Axis D, and `opus` for the independent design of Axis E. All five are read-only — they report, they never fix (the `clean-room-reviewer` has no file tools at all).
+Each subagent carries its own model and tool restrictions, so the axes cost what they are worth: `opus` for the code-smell judgment of Axis A, `sonnet` for the diff-vs-spec comparison of Axis B, `haiku` for running a command in Axis C, `sonnet` for the documentation-drift review of Axis D, and `sonnet` for the diff-vs-plan comparison of Axis E. All are read-only — they report, they never fix.
 
 The skill is agnostic - it works on any repository and does not depend on a specific issue workspace or directory layout. In the `issue-tracker` workflow it runs exactly once, before resolving a **main-issue** (an issue with children) — see [resolve.md](../issue-tracker/workflows/resolve.md) step 2 — against the whole subtree's spec. A child-issue's own `issue-implementer` Verify step runs only the test suite (via `test-runner`), not this full five-axis skill.
 
 ## Inputs (optional)
 
-The skill runs with zero configuration. When invoked it may receive an optional argument (for example `/review <acceptance-criteria-path>`):
+The skill runs with zero configuration. When invoked it may receive optional arguments (for example `/review <acceptance-criteria-path> [<design-plan-path>]`):
 
-- **acceptance-criteria** - a path to the acceptance criteria to verify against: a folder (e.g. a feature's `issues/` directory), a single spec/PRD file, or a ticket. When present it is passed to Axis B as the specification source and enables that axis; a folder is expanded to every acceptance-criteria file it contains. It is also the primary source for **Axis E's** problem statement (see below).
+- **acceptance-criteria** - a path to the acceptance criteria to verify against: a folder (e.g. a feature's `issues/` directory), a single spec/PRD file, or a ticket. When present it is passed to Axis B as the specification source and enables that axis; a folder is expanded to every acceptance-criteria file it contains.
+- **design-plan** - a path to the `design.md` module plan to check conformance against. When present, **Axis E** runs as `design-reviewer` against it. When absent (or the file no longer exists — the plan is temporary and is deleted at the resolution gate), Axis E is skipped. In the `issue-tracker` flow, resolve.md passes `docs/issues/<main-id>/design.md` here when the architect step produced one. If not passed explicitly, the skill may look for a `design.md` alongside the acceptance-criteria path.
 
-The command inputs for the Standards and Tests axes (the static-analysis command list and the test command) are discovered from the repository by convention (each subagent knows its own conventions), so they need not be passed. The skill never hardcodes a project-specific directory. Axis E needs no configuration either — this conversation assembles its brief.
+The command inputs for the Standards and Tests axes (the static-analysis command list and the test command) are discovered from the repository by convention (each subagent knows its own conventions), so they need not be passed. The skill never hardcodes a project-specific directory.
 
 ## Workflow
 
 ### 1. Run the axes
 
-Spawn **Axis A (Standards)**, **Axis C (Tests)**, **Axis D (Docs)** — and **Axis B (Specification)** when a specification source is available — as subagents **in parallel, in a single message**, passing each the inputs it expects (repo root, the main branch, and - for Axis B - the **acceptance-criteria** path from the invocation, if one was given). Each subagent's definition documents its own inputs.
+Spawn **Axis A (Standards)**, **Axis C (Tests)**, **Axis D (Docs)** — plus **Axis B (Specification)** when a specification source is available, and **Axis E (Design-Conformance)** when a design plan is available — as subagents **in parallel, in a single message**, passing each the inputs it expects (repo root, the main branch, and - for Axis B - the **acceptance-criteria** path, and - for Axis E - the **design-plan** path). Each subagent's definition documents its own inputs.
 
 - Always run **Axis A**, **Axis C**, and **Axis D**. Axis D always runs — it compares the diff against the repository's own documentation and so needs no specification source.
 - Run **Axis B** only if a specification source is available - the **acceptance-criteria** argument, or otherwise a spec/PRD file, ticket, or path the user names. If none is found, skip it and note in the report that no specification was available.
-
-**Axis E (Clean-Room)** is not one of the parallel fire-and-forget subagents: it runs the `clean-room-review` workflow, whose question/answer loop this conversation drives from the real code. Kick off the parallel axes above, then carry out Axis E as described next.
-
-#### Axis E — assemble the brief, then run clean-room-review
-
-Axis E **always runs.** First assemble a **neutral brief** for the `clean-room-reviewer` containing exactly these three parts and nothing more:
-
-1. **Big picture** — one or two sentences on what the application is and the problem it exists to solve, so the reviewer knows the domain it is designing for.
-2. **Problem** — what this change must achieve. Take it from the **issue description** (the acceptance-criteria / issue source) when one is available; otherwise derive it from this conversation.
-3. **Base data & its shape** — the raw data the system works with and its form (tree structure, SQL database, graph, event stream, files, …). The reviewer needs this factual substrate to base its design on.
-
-Discipline that makes this axis worth running:
-
-- **Pass only the raw ("base") data and its shape.** Do **not** put derived domain data, the domain model, or any domain logic into the brief — those are exactly what this axis exists to have re-derived and, where warranted, challenged. If our own domain modeling leaks into the brief, the reviewer merely ratifies it and the axis is worthless.
-- **In the Q&A loop, answer the reviewer's questions from the real code and domain — status quo only, no steering.** Sharing domain knowledge **is allowed when the reviewer explicitly asks for it**: the withholding applies to the proactive brief, not to honest answers to direct questions. Reflect *what is*, never nudge toward the solution we already built.
-
-Then run the [`clean-room-review`](../clean-room-review/SKILL.md) workflow with that brief: derive the reviewer's role, spawn `clean-room-reviewer`, run its question/answer loop (recording every Q&A pair in a table), and **synthesize its blind proposal against the actual implementation**. The synthesis classifies each point as one of:
-
-- **Confirmed** — the independent design agrees with what we built; independent evidence the approach is sound.
-- **Better** — the independent design improves on the implementation or its domain modeling; a change worth making.
-- **Impractical** — the proposal is ruled out by a real constraint the blind reviewer could not see; name the constraint.
+- Run **Axis E** only if a **design-plan** (`design.md`) is available. When present, `design-reviewer` reviews the diff against it in the same parallel batch as A/B/C/D — it is a fire-and-forget diff-vs-plan review with no question/answer loop. When absent, skip Axis E and note in the report that no design plan was available (exactly as Axis B is skipped without a spec). There is no clean-room fallback here — the plan's soundness was already challenged by the clean-room gut-check in the architect workflow, *before* implementation.
 
 ### 2. Consolidation
 
-- Present each axis's report separately under its heading: `## Standards`, `## Specification` (if run), `## Tests`, `## Docs`, and `## Clean-Room`. The `## Docs` section is the `docs-reviewer`'s German report verbatim, and it is always present — showing either the documentation drift it found or that nichts gefunden wurde. The `## Clean-Room` section shows the Q&A table and the reconciled proposal (Confirmed / Better / Impractical).
-- Summarize the result in one line: number of findings per axis (including Docs and Clean-Room), the most critical comment per axis, and whether the test suite is green.
+- Present each axis's report separately under its heading: `## Standards`, `## Specification` (if run), `## Tests`, `## Docs`, and `## Design-Conformance` (if run). The `## Docs` section is the `docs-reviewer`'s German report verbatim, and it is always present — showing either the documentation drift it found or that nichts gefunden wurde. The `## Design-Conformance` section shows the conformance verdict and the notable departures (drift-to-fix vs justified-improvement).
+- Summarize the result in one line: number of findings per axis (including Docs, and Axis E if it ran), the most critical comment per axis, and whether the test suite is green.
 
 ### 3. Conclusion
 
@@ -83,14 +64,14 @@ just pass the inputs:
 | B - Specification | `spec-reviewer` | the diff | `sonnet` |
 | C - Tests | `test-runner` | the test suite | `haiku` |
 | D - Docs | `docs-reviewer` | the diff | `sonnet` |
-| E - Clean-Room | `clean-room-reviewer` (via `clean-room-review`) | an independent design from problem + raw data, reconciled against the diff | `opus` |
+| E - Design-Conformance | `design-reviewer` (when a `design.md` exists) | the diff vs the `design.md` plan | `sonnet` |
 
-Axes A–D are spawned directly and in parallel. Axis E is driven through the
-`clean-room-review` skill/workflow — the `clean-room-reviewer` has no file tools
-and never sees the repository, so this conversation must run its question/answer
-loop and do the reconciliation.
+All axes are spawned directly and in parallel, in a single message —
+`design-reviewer` (Axis E) among them whenever a `design.md` is available. There
+is no question/answer loop and no clean-room step in this skill; the independent
+clean-room design happens once in the architect workflow, on the plan, before
+implementation.
 
 If a subagent is unavailable in the current environment, say so rather than
 inlining its work into this conversation - that would defeat the point of the
-split. For Axis E specifically, a reviewer that could see the code would not be a
-clean room, so never role-play it yourself.
+split.

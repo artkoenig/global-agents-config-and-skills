@@ -1,0 +1,27 @@
+{
+  "agent_name": "design-reviewer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The `checkout-redesign` main-issue is implemented and its module plan sits at `docs/issues/01-checkout-redesign/design.md`. Run the five-axis review over the current changes before we resolve it.",
+      "expected_output": "Because a design plan is available, Axis E runs as the design-reviewer subagent against that design.md — a read-only diff-vs-plan conformance check (did the code honour the planned module boundaries and shared contracts?), not a clean-room re-design and not a behaviour or code-smell check. It reports departures (ideally distinguishing drift-to-fix from justified-improvement) and fixes nothing. The other axes still run.",
+      "expectations": [
+        "Axis E was routed to the design-reviewer subagent against the provided design.md, because a design plan was available — NOT to the clean-room-reviewer / clean-room-review workflow.",
+        "The design-reviewer check is scoped to conformance: the diff against the plan's module boundaries and shared contracts — not behaviour vs acceptance criteria (Axis B), code smells (Axis A), or documentation (Axis D).",
+        "Axis E ran read-only: design-reviewer reports departures (ideally distinguishing drift-to-fix from justified-improvement) without editing or 'fixing' any file.",
+        "The other axes still run (A Standards, C Tests, D Docs, and B Specification given the issue spec); Axis E is the only axis whose mode changed."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "This is a single-slice main-issue — there was no module-planning step and there's no design.md anywhere for it. Run the review before we resolve it.",
+      "expected_output": "With no design plan available, Axis E (Design-Conformance) is simply skipped — exactly as Axis B is skipped without a spec — and the report notes that no design plan was available. There is NO clean-room fallback: the review runs its other axes (Standards, Tests, Docs, and Specification given the issue spec) and does not invoke design-reviewer or clean-room-reviewer.",
+      "expectations": [
+        "Because no design.md exists, Axis E was skipped and the report notes that no design plan was available — the assistant did NOT invoke design-reviewer.",
+        "There was no clean-room fallback: the assistant did NOT run the clean-room-review workflow / clean-room-reviewer as a stand-in for Axis E.",
+        "The assistant did not fabricate a design.md or demand one; a plan-less main-issue simply has no Axis E, like a spec-less one has no Axis B.",
+        "The other axes still ran (Standards, Tests, Docs, and Specification given the issue spec), so the review is otherwise complete."
+      ]
+    }
+  ]
+}

@@ -77,6 +77,7 @@ Verifikation**. Geändert wird die Issue-/Branch-Logik dazwischen.
 | Idee → PRD | `grill-me-for-spec` | Abb. 1 |
 | PRD → Haupt-Issue + Kind-Issues | `issue-tracker` | Abb. 1 |
 | Mehrere Haupt-Issues lokal parallel | (mehrere Sessions, Worktrees) | Abb. 2 |
+| Kind-Issues planen (Modulebene, temporäre `design.md`) | `solution-architect` + `clean-room-review` | — |
 | Kind-Issues umsetzen, 1 PR | `issue-implementer` × N | Abb. 3 |
 | Triviale Ausnahme | (kein Issue nötig) | Abb. 4 |
 | Push-Verifikation | `pre-push` + `workflow-evals` | Abb. 5 |

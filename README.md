@@ -25,27 +25,29 @@ below.
 | `grill-me-for-spec` | Interactive requirements analysis that grills you one question at a time, researches the codebase, refines the domain glossary (`CONTEXT.md`) and ADRs, writes a PRD, and opens the main-issue that carries it. |
 | `issue-tracker` | Local, file-based tracker under `docs/issues/`. A main-issue maps 1:1 to one branch, worktree and PR; its nested child-issues are that PR's vertical slices. Handles init, lifecycle, breakdown and implementation. |
 | `engineering-principles` | The design and implementation principles that must be read before any architectural decision or code change. Preloaded into subagents via their `skills:` frontmatter. |
-| `review` | The five-axis review (Standards, Specification, Tests, Docs, Clean-Room) that orchestrates the reviewer subagents below. Axis E runs an independent `clean-room-review` design of the problem and reconciles it against the change. |
-| `clean-room-review` | An independent, blind design proposal from the `clean-room-reviewer` (which never sees the code), reconciled against reality. Used standalone for design gut-checks and as Axis E of `review`. |
+| `review` | The five-axis review (Standards, Specification, Tests, Docs, Design-Conformance) that orchestrates the reviewer subagents below. Axis E checks the diff against the `design.md` module plan; with no plan it is skipped, like Specification without a spec. |
+| `clean-room-review` | An independent, blind design proposal from the `clean-room-reviewer` (which never sees the code), reconciled against reality. Used standalone for design gut-checks and to gut-check the architect's `design.md` before implementation. |
 | `cloud-session-bootstrap` | Wires a project so its cloud sessions load these skills and subagents via a `SessionStart` hook. See [Using this in a cloud session](#using-this-in-a-cloud-session). |
 | `self-test` | Runs the deterministic git checks and behavioral evals that keep this repo's own rules honest. See [Self-testing the workflow](#self-testing-the-workflow). |
 | `skill-creator` | Create, edit, optimize and benchmark skills. |
 
 ## The subagents
 
-`agents/` holds seven subagents whose job is to keep the main conversation's
+`agents/` holds nine subagents whose job is to keep the main conversation's
 context small: the expensive, read-heavy work happens in their context and only a
 summary comes back.
 
 | Subagent | Model | Role |
 | --- | --- | --- |
 | `spec-researcher` | `sonnet` | Read-only codebase/domain research that grounds a `grill-me-for-spec` session. Returns a briefing, not file dumps. |
+| `solution-architect` | `opus` | Plans the module-level implementation of one decomposed main-issue into a temporary `design.md` (module map + shared contracts), so the sequential slices build against agreed boundaries. Runs once, after decompose, before implement. |
 | `issue-implementer` | `opus` | Implements **one** tracked issue, editing the session's working tree in place on the main-issue branch and handing the slice back uncommitted. Dispatched one at a time, never in parallel. |
 | `standards-reviewer` | `opus` | Axis A of `review`: static-analysis gate + code-smell review of the whole codebase. |
 | `spec-reviewer` | `sonnet` | Axis B of `review`: the diff against its acceptance criteria. |
 | `test-runner` | `haiku` | Axis C of `review`: run the suite, report green/red. |
 | `docs-reviewer` | `sonnet` | Axis D of `review`: the diff against the repository's own documentation. |
-| `clean-room-reviewer` | `opus` | Axis E of `review`: designs an independent solution from the problem and raw data alone (it never sees the code), to challenge the implementation. Driven via the `clean-room-review` skill. |
+| `design-reviewer` | `sonnet` | Axis E of `review` when a plan exists: the diff against the `solution-architect`'s `design.md` — did the implementation honour the planned module boundaries and shared contracts? |
+| `clean-room-reviewer` | `opus` | The architect's plan gut-check (and standalone design gut-checks): designs an independent solution from the problem and raw data alone (it never sees the code), to challenge the approach before implementation. Driven via the `clean-room-review` skill. |
 
 Each declares the skills it needs via the `skills:` frontmatter field, so the
 principles are preloaded into the subagent's context rather than costing the main
@@ -69,6 +71,24 @@ working tree in place on the main-issue branch and hands its slice back
 uncommitted — there is no per-child worktree and no branch to merge. (`next
 --all` still lists the whole unblocked frontier, but as an overview, not a batch
 to run at once.) See `skills/issue-tracker/workflows/implement.md`.
+
+### Planning the module structure once
+
+Because child-issues are implemented sequentially and in isolation, each
+implementer would otherwise invent its own module boundaries and shared types,
+and the slices would drift. So after a spec is decomposed and before any slice is
+built, the `solution-architect` runs **once per main-issue** and writes the
+module-level plan to a **temporary** `docs/issues/<main-id>/design.md`: a module
+map, the public contracts the slices exchange, and the slice-to-module mapping.
+The plan is gut-checked by an independent `clean-room-review` before any code is
+written, and each `issue-implementer` reads it. At the resolution gate, the
+`review` skill's Axis E (Design-Conformance) then checks the finished diff back
+against this same `design.md` — did the implementation follow the plan? — which is
+why the clean-room independence is spent up front, on the plan itself. The plan is
+a working artifact, not part of the deliverable: it is deleted at the resolution
+gate (after that review) so it never lands in the PR — which is why it does not
+clash with the rule that issue docs stay solution-free. See
+`skills/issue-tracker/workflows/architect.md`.
 
 ### Closing an issue that will never be built
 

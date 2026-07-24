@@ -247,14 +247,21 @@ than files, logs, or diffs.
 
 - **Codebase research** (during `grill-me-for-spec`, or any "how does this work
   today?" question spanning more than a handful of files) → `spec-researcher`.
+- **Module-level planning of a decomposed main-issue** (once, after decompose and
+  before implement) → `solution-architect`. It writes a temporary `design.md`
+  (module map + shared contracts) that the implementers build against; gut-check
+  it with `clean-room-review` before implementing. Skip it for a single-slice
+  main-issue.
 - **Implementing a tracked issue** → `issue-implementer`, one issue at a time.
   Use `tracker.py next` to get the next actionable child-issue and dispatch a
   single implementer for it; when it returns, dispatch the next. Implementers
   run **sequentially, never in parallel** — each edits the session's working
   tree in place on the main-issue branch and hands its slice back.
 - **Verification** → the `review` skill, which fans out to `standards-reviewer`,
-  `spec-reviewer`, `test-runner`, `docs-reviewer` and — via `clean-room-review` —
-  `clean-room-reviewer`.
+  `spec-reviewer`, `test-runner`, `docs-reviewer` and, for Axis E when a
+  `design.md` plan exists, `design-reviewer` against that plan (skipped when no
+  plan exists). The independent clean-room design happens earlier, on the plan,
+  in the architect step.
 
 Do not delegate anything that has to ask me something — subagents have no way to
 put a question to me and will invent the answer instead. The grilling in
