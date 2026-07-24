@@ -29,6 +29,20 @@ import worktree_guard as guard  # noqa: E402
 
 MODULE_PATH = str(ASSET_DIR / "worktree_guard.py")
 
+# Every env var that marks a cloud (remote) session, mirrored from the guard so
+# the two never drift. Stripped to build a deterministic *local* environment for
+# the CLI tests below: otherwise, when this suite itself runs inside a cloud
+# session (where these are set), the guard would no-op and every local-behaviour
+# assertion would spuriously "pass" as allowed.
+REMOTE_ENV_VARS = frozenset({guard.REMOTE_FLAG_ENV_VAR, *guard.REMOTE_MARKER_ENV_VARS})
+
+
+def local_env(**overrides):
+    """os.environ with every remote-session marker removed, plus any overrides."""
+    env = {k: v for k, v in os.environ.items() if k not in REMOTE_ENV_VARS}
+    env.update(overrides)
+    return env
+
 
 class IsIssueTrackerPath(unittest.TestCase):
     def test_matches_default_dir(self):
@@ -54,6 +68,34 @@ class IsProtectedBranch(unittest.TestCase):
         for b in ("issue/foo", "work/anything", None, "mainline"):
             with self.subTest(b=b):
                 self.assertFalse(guard.is_protected_branch(b))
+
+
+class IsRemoteSession(unittest.TestCase):
+    def test_flag_true_is_remote(self):
+        self.assertTrue(guard.is_remote_session({"CLAUDE_CODE_REMOTE": "true"}))
+
+    def test_empty_env_is_local(self):
+        self.assertFalse(guard.is_remote_session({}))
+
+    def test_flag_other_than_true_alone_is_local(self):
+        # The exact-"true" match is preserved for CLAUDE_CODE_REMOTE itself, so a
+        # stray "1"/"false" with no other marker stays local.
+        self.assertFalse(guard.is_remote_session({"CLAUDE_CODE_REMOTE": "1"}))
+
+    def test_session_id_marker_is_remote(self):
+        self.assertTrue(guard.is_remote_session(
+            {"CLAUDE_CODE_REMOTE_SESSION_ID": "cse_x"}))
+
+    def test_environment_type_marker_is_remote(self):
+        self.assertTrue(guard.is_remote_session(
+            {"CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE": "cloud_default"}))
+
+    def test_empty_marker_values_are_local(self):
+        # A marker present but empty is not a real remote session.
+        self.assertFalse(guard.is_remote_session({
+            "CLAUDE_CODE_REMOTE_SESSION_ID": "",
+            "CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE": "",
+        }))
 
 
 class EvaluateDirectEdit(unittest.TestCase):
@@ -149,11 +191,11 @@ class PreToolUseCli(unittest.TestCase):
     def _run(self, tool_name, file_path, env=None):
         payload = {"tool_name": tool_name, "tool_input": {"file_path": file_path}}
         if env is None:
-            # Default to a *local* environment: strip CLAUDE_CODE_REMOTE so the
+            # Default to a *local* environment: strip every remote marker so the
             # local-behaviour tests below stay deterministic even when the suite
             # itself runs inside a cloud session (where the guard no-ops). Cloud
-            # behaviour is covered by the dedicated tests that set it explicitly.
-            env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_REMOTE"}
+            # behaviour is covered by the dedicated tests that set them explicitly.
+            env = local_env()
         return subprocess.run(
             [sys.executable, MODULE_PATH], cwd=self.repo,
             input=json.dumps(payload), capture_output=True, text=True, env=env,
@@ -235,7 +277,7 @@ class PreToolUseCli(unittest.TestCase):
     def test_remote_session_allows_direct_code_edit(self):
         # Cloud sessions run in their own clone, so the guard no-ops: a direct
         # code edit in the main checkout that would be denied locally is allowed.
-        env = {**os.environ, "CLAUDE_CODE_REMOTE": "true"}
+        env = local_env(CLAUDE_CODE_REMOTE="true")
         result = self._run("Write", str(self.repo / "src.py"), env=env)
         self._assert_allowed(result)
 
@@ -243,16 +285,31 @@ class PreToolUseCli(unittest.TestCase):
         # The remote no-op is total: even the protected-branch check is skipped,
         # since there is no shared checkout to protect in a per-session clone.
         self._git("branch", "-m", "main")
-        env = {**os.environ, "CLAUDE_CODE_REMOTE": "true"}
+        env = local_env(CLAUDE_CODE_REMOTE="true")
         result = self._run("Edit", str(self.repo / "README.md"), env=env)
         self._assert_allowed(result)
 
     def test_remote_flag_other_than_true_still_enforced(self):
-        # Only the exact "true" value disables the guard; any other value leaves
-        # local enforcement intact, matching the SessionStart hook's check.
-        env = {**os.environ, "CLAUDE_CODE_REMOTE": "1"}
+        # A non-"true" CLAUDE_CODE_REMOTE value, with no other remote marker
+        # present, does not disable the guard: local enforcement stays intact.
+        env = local_env(CLAUDE_CODE_REMOTE="1")
         result = self._run("Write", str(self.repo / "src.py"), env=env)
         self._assert_denied(result)
+
+    def test_remote_session_id_marker_allows_direct_code_edit(self):
+        # Regression for the guard firing in cloud sessions: the flag need not be
+        # "true" — a CLAUDE_CODE_REMOTE_SESSION_ID set by the remote runner is on
+        # its own enough to recognize the per-session clone and no-op.
+        env = local_env(CLAUDE_CODE_REMOTE_SESSION_ID="cse_test")
+        result = self._run("Write", str(self.repo / "src.py"), env=env)
+        self._assert_allowed(result)
+
+    def test_remote_environment_type_marker_allows_direct_code_edit(self):
+        # Likewise, CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE alone marks a cloud
+        # session, even without CLAUDE_CODE_REMOTE=="true".
+        env = local_env(CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE="cloud_default")
+        result = self._run("Write", str(self.repo / "src.py"), env=env)
+        self._assert_allowed(result)
 
     def _start_merge_conflict(self):
         """Leave the repo mid-merge with `conflict.py` unmerged."""

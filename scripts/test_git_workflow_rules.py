@@ -26,22 +26,6 @@ MODULE_PATH = str(Path(__file__).resolve().parent / "git_workflow_rules.py")
 ZERO_SHA = "0" * 40
 
 
-class IsValidBranchName(unittest.TestCase):
-    def test_accepts_issue_slugs(self):
-        for name in ("issue/foo", "issue/foo-bar", "issue/123",
-                     "issue/a1-b2-c3", "issue/x"):
-            with self.subTest(name=name):
-                self.assertTrue(rules.is_valid_branch_name(name))
-
-    def test_rejects_other_shapes(self):
-        for name in ("main", "master", "feature/foo", "fix/bug", "issue/",
-                     "issue", "Issue/foo", "issue/Foo", "issue/foo_bar",
-                     "issue/foo/bar", "issue/foo bar", "issue/foo ", " issue/foo",
-                     "", "issue/föö"):
-            with self.subTest(name=name):
-                self.assertFalse(rules.is_valid_branch_name(name))
-
-
 class IsProtectedRef(unittest.TestCase):
     def test_protected(self):
         for ref in ("main", "master", "refs/heads/main", "refs/heads/master"):
@@ -171,13 +155,15 @@ class PrePushCli(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("protected", result.stderr)
 
-    def test_bad_branch_name_is_rejected(self):
-        self._git("branch", "-m", "feature/foo")
+    def test_non_issue_branch_name_is_accepted(self):
+        # Branch names are no longer enforced: a cloud session's
+        # platform-assigned branch (e.g. claude/...) must push cleanly rather
+        # than be rejected, since the session cannot rename it.
+        self._git("branch", "-m", "claude/some-task")
         sha = self._commit("Add file")
-        line = f"refs/heads/feature/foo {sha} refs/heads/feature/foo {ZERO_SHA}\n"
+        line = f"refs/heads/claude/some-task {sha} refs/heads/claude/some-task {ZERO_SHA}\n"
         result = self._run_pre_push(line)
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("issue/", result.stderr)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_empty_stdin_passes(self):
         self._commit("Add file")

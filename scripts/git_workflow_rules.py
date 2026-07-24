@@ -5,7 +5,6 @@ This module has two roles that stay strictly separated:
 
   1. Pure, importable predicates with no git and no I/O — the part that is
      unit-tested directly:
-       - is_valid_branch_name(name)
        - is_protected_ref(ref)
        - commit_has_agent_coauthor(message)
        - is_trivial_change(files, added_lines)
@@ -14,12 +13,16 @@ This module has two roles that stay strictly separated:
      both the `.githooks/pre-push` hook and manual invocation, so the exact
      same logic runs at push time and on demand.
 
-Rules enforced (PRD user stories 7-9):
-  7. A work branch name must match ^issue/[a-z0-9-]+$.
+Rules enforced (PRD user stories 8-9):
   8. A push whose target ref is a protected branch (main/master) is rejected;
      protected branches move only through a GitHub PR merge.
   9. A pushed commit whose message carries a Co-authored-by trailer is rejected
      (single-maintainer repo, no allow-list).
+
+Branch names are intentionally NOT enforced (PRD user story 7 was dropped): a
+cloud (Claude Code on the web) session runs on a platform-assigned branch such
+as ``claude/<slug>`` that the session cannot rename, so a ``^issue/`` gate would
+reject every remote push. ``issue/<slug>`` stays the recommended convention.
 
 is_trivial_change is not a push gate — triviality governs whether a change may
 skip issue tracking, a decision the hook cannot observe. It lives here because
@@ -40,7 +43,6 @@ import subprocess
 import sys
 from pathlib import PurePosixPath
 
-BRANCH_NAME_RE = re.compile(r"^issue/[a-z0-9-]+$")
 PROTECTED_REFS = frozenset({"main", "master"})
 TRIVIAL_EXTENSIONS = frozenset({".md", ".json", ".yaml", ".yml", ".txt"})
 # A Co-authored-by trailer: a line that starts (ignoring leading blanks) with
@@ -53,11 +55,6 @@ _HEADS_PREFIX = "refs/heads/"
 # --------------------------------------------------------------------------- #
 # Pure predicates (no git, no I/O)                                            #
 # --------------------------------------------------------------------------- #
-
-def is_valid_branch_name(name: str) -> bool:
-    """True if ``name`` is a legal work branch: exactly ``issue/<slug>``."""
-    return bool(BRANCH_NAME_RE.match(name))
-
 
 def is_protected_ref(ref: str) -> bool:
     """True if ``ref`` names a protected branch that must never receive a push.
@@ -151,7 +148,7 @@ def _local_commits() -> list[str]:
 # --------------------------------------------------------------------------- #
 
 def _check_push_line(
-    local_ref: str, local_sha: str, remote_ref: str, remote_sha: str
+    _local_ref: str, local_sha: str, remote_ref: str, remote_sha: str
 ) -> list[str]:
     violations: list[str] = []
 
@@ -164,14 +161,6 @@ def _check_push_line(
             f"push target '{_strip_heads(remote_ref)}' is protected; "
             "update it through a GitHub PR merge, not a local push"
         )
-
-    # Rule 7: a pushed branch must be a legal issue/<slug> name.
-    if local_ref.startswith(_HEADS_PREFIX):
-        branch = _strip_heads(local_ref)
-        if not is_valid_branch_name(branch):
-            violations.append(
-                f"branch '{branch}' does not match ^issue/[a-z0-9-]+$"
-            )
 
     # Rule 9: no pushed commit may carry a Co-authored-by trailer.
     for sha in _commits_in_range(local_sha, remote_sha):
@@ -223,8 +212,6 @@ def _cmd_check(_argv: list[str]) -> int:
     violations: list[str] = []
     if is_protected_ref(branch):
         violations.append(f"currently on protected branch '{branch}'")
-    elif not is_valid_branch_name(branch):
-        violations.append(f"branch '{branch}' does not match ^issue/[a-z0-9-]+$")
     try:
         for sha in _local_commits():
             if commit_has_agent_coauthor(_commit_message(sha)):
