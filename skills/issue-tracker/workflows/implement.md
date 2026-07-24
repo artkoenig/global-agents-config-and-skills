@@ -112,7 +112,7 @@ python3 <skill>/scripts/tracker.py list --parent "<main-id>"
 If every child-issue is now closed (`resolved`, or `superseded` for a slice that
 turned out not to be needed), follow [resolve.md](resolve.md) on the
 **main-issue id** — it was already claimed in step 1, so this runs the full
-four-axis `testing` skill, resolves the main-issue, then automatically commits,
+five-axis `review` skill, resolves the main-issue, then automatically commits,
 pushes and opens the PR (resolve.md steps 4–5). That is where the accumulated
 child work is committed. One PR for the whole main-issue. If child-issues remain
 open (blocked, or awaiting info), leave the main-issue alone; it isn't done yet.
@@ -153,17 +153,17 @@ sessions the clone). Follow the `engineering-principles` skill. Then run the
 project's test suite and verify it passes.
 
 Do not dispatch this to `issue-implementer`: that subagent's Verify step runs
-only the test suite, on the premise that the full four-axis check happens once
+only the test suite, on the premise that the full five-axis check happens once
 at the main-issue level afterward (see resolve.md). A single-slice main-issue
 *is* that main-issue level — its resolution gate still needs the full
-`testing` skill, so implementing it as if it were an ordinary child-issue would
+`review` skill, so implementing it as if it were an ordinary child-issue would
 skip that gate.
 
 ### 3. Resolve
 
 Follow [resolve.md](resolve.md) on the main-issue id. Because the id has no
 `/`, resolve.md correctly identifies it as a main-issue (not by checking for
-children, which it has none of) and runs the full four-axis `testing` skill
+children, which it has none of) and runs the full five-axis `review` skill
 before resolving, committing, pushing, and opening the PR — exactly as it would
 for a multi-slice main-issue once its whole subtree finishes.
 

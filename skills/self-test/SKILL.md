@@ -22,7 +22,7 @@ python3 -m unittest discover -s scripts -p 'test_*.py'
 The behavioral evals are defined in `evals.json` files scattered throughout the repo. To run them, you will spawn subagents for execution and grading.
 
 ### 1. Discovery
-The following 9 behavioral evals are currently defined:
+The following 10 behavioral eval scenarios are currently defined across 9 files:
 1. **Investigation stays read-only** (`evals/agents-md/investigate-means-read-only/evals.json`)
 2. **Trivial doc edit isn't over-tracked** (`evals/agents-md/trivial-change-not-over-tracked/evals.json`)
 3. **Bug reproduced end-to-end before fixing** (`evals/agents-md/reproduce-bug-e2e-first/evals.json`)
@@ -30,10 +30,10 @@ The following 9 behavioral evals are currently defined:
 5. **Direct non-trivial edits happen in an isolated worktree** (`evals/agents-md/worktree-isolation/evals.json`)
 6. **Code-health review delegated to standards-reviewer** (`agents/standards-reviewer/evals/evals.json`)
 7. **Test run delegated to the test-runner subagent** (`agents/test-runner/evals/evals.json`)
-8. **Vague feature triggers spec grilling** (`skills/grill-me-for-spec/evals/evals.json`)
+8. **Vague feature triggers spec grilling**, and **a pre-baked solution is not transcribed into the spec** (`skills/grill-me-for-spec/evals/evals.json` — two scenarios)
 9. **Reported bug filed as a tracked fix** (`skills/issue-tracker/evals/evals.json`)
 
-Read these files using the `view_file` tool to extract the `prompt` and `expectations` for each test case.
+Read these files using the `view_file` tool to extract the `prompt` and `expectations` for each test case. Some files hold more than one scenario — run every case in the file, not just the first.
 
 ### 2. Execution
 For each test case found, use the `invoke_subagent` tool to spawn an executor subagent.

@@ -17,7 +17,7 @@ below.
 
 ## The skills
 
-`skills/` holds seven personal skills. Most are triggered automatically by their
+`skills/` holds eight personal skills. Most are triggered automatically by their
 `description`; a few are also `/`-invocable.
 
 | Skill | Role |
@@ -25,14 +25,15 @@ below.
 | `grill-me-for-spec` | Interactive requirements analysis that grills you one question at a time, researches the codebase, refines the domain glossary (`CONTEXT.md`) and ADRs, writes a PRD, and opens the main-issue that carries it. |
 | `issue-tracker` | Local, file-based tracker under `docs/issues/`. A main-issue maps 1:1 to one branch, worktree and PR; its nested child-issues are that PR's vertical slices. Handles init, lifecycle, breakdown and implementation. |
 | `engineering-principles` | The design and implementation principles that must be read before any architectural decision or code change. Preloaded into subagents via their `skills:` frontmatter. |
-| `testing` | The four-axis verification (Standards, Specification, Tests, Docs) that orchestrates the four reviewer subagents below. |
+| `review` | The five-axis review (Standards, Specification, Tests, Docs, Clean-Room) that orchestrates the reviewer subagents below. Axis E runs an independent `clean-room-review` design of the problem and reconciles it against the change. |
+| `clean-room-review` | An independent, blind design proposal from the `clean-room-reviewer` (which never sees the code), reconciled against reality. Used standalone for design gut-checks and as Axis E of `review`. |
 | `cloud-session-bootstrap` | Wires a project so its cloud sessions load these skills and subagents via a `SessionStart` hook. See [Using this in a cloud session](#using-this-in-a-cloud-session). |
 | `self-test` | Runs the deterministic git checks and behavioral evals that keep this repo's own rules honest. See [Self-testing the workflow](#self-testing-the-workflow). |
 | `skill-creator` | Create, edit, optimize and benchmark skills. |
 
 ## The subagents
 
-`agents/` holds six subagents whose job is to keep the main conversation's
+`agents/` holds seven subagents whose job is to keep the main conversation's
 context small: the expensive, read-heavy work happens in their context and only a
 summary comes back.
 
@@ -40,10 +41,11 @@ summary comes back.
 | --- | --- | --- |
 | `spec-researcher` | `sonnet` | Read-only codebase/domain research that grounds a `grill-me-for-spec` session. Returns a briefing, not file dumps. |
 | `issue-implementer` | `opus` | Implements **one** tracked issue, editing the session's working tree in place on the main-issue branch and handing the slice back uncommitted. Dispatched one at a time, never in parallel. |
-| `standards-reviewer` | `opus` | Axis A of `testing`: static-analysis gate + code-smell review of the whole codebase. |
-| `spec-reviewer` | `sonnet` | Axis B of `testing`: the diff against its acceptance criteria. |
-| `test-runner` | `haiku` | Axis C of `testing`: run the suite, report green/red. |
-| `docs-reviewer` | `sonnet` | Axis D of `testing`: the diff against the repository's own documentation. |
+| `standards-reviewer` | `opus` | Axis A of `review`: static-analysis gate + code-smell review of the whole codebase. |
+| `spec-reviewer` | `sonnet` | Axis B of `review`: the diff against its acceptance criteria. |
+| `test-runner` | `haiku` | Axis C of `review`: run the suite, report green/red. |
+| `docs-reviewer` | `sonnet` | Axis D of `review`: the diff against the repository's own documentation. |
+| `clean-room-reviewer` | `opus` | Axis E of `review`: designs an independent solution from the problem and raw data alone (it never sees the code), to challenge the implementation. Driven via the `clean-room-review` skill. |
 
 Each declares the skills it needs via the `skills:` frontmatter field, so the
 principles are preloaded into the subagent's context rather than costing the main

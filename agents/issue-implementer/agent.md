@@ -77,12 +77,12 @@ the main-issue. Then report that outcome instead of running step 3's test run.
 Never use it to escape a slice that is merely hard or failing.
 
 ### 3. Verify
-Run **only the test suite** for your slice — not the full four-axis `testing`
+Run **only the test suite** for your slice — not the full five-axis `review`
 skill. Delegate the run to the `test-runner` subagent: it finds the project's
 test command, runs the suite, and reports green/red with the failing output. The
-full four-axis `testing` skill (Standards + Spec + Tests + Docs) is reserved for
-the **main-issue** and runs exactly once, after its whole subtree is done (see
-`resolve.md`); it never runs per child-issue.
+full five-axis `review` skill (Standards + Spec + Tests + Docs + Clean-Room) is
+reserved for the **main-issue** and runs exactly once, after its whole subtree is
+done (see `resolve.md`); it never runs per child-issue.
 
 A red suite means you are not done: fix it and re-run `test-runner`. Never
 weaken or delete a test to make the suite pass; if an existing test legitimately
@@ -118,7 +118,7 @@ brief and factual:
 - The issue id and its final status.
 - What you built, in two or three sentences — not a file-by-file walkthrough.
 - The test-suite result: green or red (and, if red, the failing output) — the
-  four-axis `testing` skill is not run per child-issue, so there is no
+  five-axis `review` skill is not run per child-issue, so there is no
   per-axis result to report here.
 - The acceptance-criteria table from step 3, in full — it's the point of the
   report, not detail to trim.

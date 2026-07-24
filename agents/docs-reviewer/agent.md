@@ -1,6 +1,6 @@
 ---
 name: docs-reviewer
-description: "Axis D of the four-axis verification: is the documentation still consistent with what just changed? Reviews the DIFF since the merge base against the repository's documentation — CLAUDE.md at the root, every README* at the root, and everything under docs/** recursively — and reports drift as findings. Scope is the diff, not the whole codebase. Read-only: it reports drift, it does not fix it. Its report is written in German by design."
+description: "Axis D of the five-axis review: is the documentation still consistent with what just changed? Reviews the DIFF since the merge base against the repository's documentation — CLAUDE.md at the root, every README* at the root, and everything under docs/** recursively — and reports drift as findings. Scope is the diff, not the whole codebase. Read-only: it reports drift, it does not fix it. Its report is written in German by design."
 tools: Read, Glob, Grep, Bash
 model: sonnet
 color: green

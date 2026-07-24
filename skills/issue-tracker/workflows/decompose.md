@@ -96,7 +96,12 @@ python3 <skill>/scripts/tracker.py create \
 Then fill each issue's `## Description` and `## Acceptance Criteria`. Because each
 `issue.md` was just created, read it before editing it — the `Write` tool only
 overwrites a file already read this session. Keep the description
-behavior-focused; avoid hardcoding file paths that go stale.
+behavior-focused: state the problem and the desired observable behavior, **not a
+technical solution, code, or hardcoded file paths** — those pre-empt a possibly
+better implementation and go stale. Write acceptance criteria that a domain
+expert can verify using only the glossary (`CONTEXT.md`), with no knowledge of
+the concrete implementation. See
+[../reference/issue-format.md](../reference/issue-format.md) for the full rules.
 
 (This step only applies when Step 2 produced more than one slice. For exactly
 one slice, Step 3a already handled it and there is no child-issue to create

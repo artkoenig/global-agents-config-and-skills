@@ -13,11 +13,11 @@ Type: feature
 Blocked by: None
 
 ## Description
-What this issue is about / what to build. For a main-issue this section holds the
-specification (PRD).
+The problem to solve and the desired observable behavior — never a technical
+solution or code. For a main-issue this section holds the specification (PRD).
 
 ## Acceptance Criteria
-- [ ] Observable, verifiable criterion
+- [ ] Observable criterion, verifiable in domain terms
 - [ ] ...
 
 ## Comments
@@ -52,6 +52,16 @@ nesting, so there is no explicit parent field.
   order. Because a child-issue can only block a sibling that already exists, its
   blockers always carry a lower prefix — so numeric order is a valid dependency
   order, and thus a valid merge order.
-- Keep the `## Description` free of concrete file paths where possible — they go
-  stale quickly. Describe end-to-end behavior instead.
+- **Describe the problem, not the solution.** Keep the `## Description` free of a
+  prescribed technical approach, code fragments, and concrete file paths — they
+  pre-empt a possibly better implementation and go stale quickly. State the
+  end-to-end behavior the change must produce; leave *how* to implementation.
+- **Acceptance criteria are domain-level.** Each criterion must be observable and
+  verifiable using only domain knowledge (the glossary in `CONTEXT.md`), without
+  any knowledge of the concrete implementation. A criterion that names internal
+  functions, modules, or code structure is written at the wrong level — restate
+  it as the behavior a domain expert would check.
+- **Genuine settled decisions** — hard-to-reverse architectural trade-offs — are
+  recorded as ADRs under `docs/adr/` and referenced, not spelled out as
+  implementation in the issue body.
 - Do not hand-edit the header. Use the tracker so state and blocker rules hold.

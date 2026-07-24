@@ -1,6 +1,6 @@
 ---
 name: spec-reviewer
-description: "Axis B of the four-axis verification: did we build the right thing? Reviews the current DIFF against a specification — a folder of acceptance criteria, an issue.md, a PRD, or a ticket — and reports missing requirements, scope creep, and flawed logic. Scope is the diff, not the codebase. Requires a specification source; skip this agent when none exists. Read-only: it reports gaps, it does not fix them."
+description: "Axis B of the five-axis review: did we build the right thing? Reviews the current DIFF against a specification — a folder of acceptance criteria, an issue.md, a PRD, or a ticket — and reports missing requirements, scope creep, and flawed logic. Scope is the diff, not the codebase. Requires a specification source; skip this agent when none exists. Read-only: it reports gaps, it does not fix them."
 tools: Read, Glob, Grep, Bash
 model: sonnet
 color: blue

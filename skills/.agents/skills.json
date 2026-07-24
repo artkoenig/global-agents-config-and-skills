@@ -2,7 +2,7 @@
   "entries": [
     { "path": "../grill-me-for-spec" },
     { "path": "../issue-tracker" },
-    { "path": "../testing" },
+    { "path": "../review" },
     { "path": "../skill-creator" },
     { "path": "../engineering-principles" },
     { "path": "../cloud-session-bootstrap" }
