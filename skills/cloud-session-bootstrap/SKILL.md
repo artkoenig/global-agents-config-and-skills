@@ -167,10 +167,13 @@ the default branch):
 - `worktree_guard.py` is what actually enforces AGENTS.md's Worktree Isolation
   rule (see that section) — it denies an `Edit`/`Write`/`NotebookEdit` call
   that would make a non-trivial change directly in the main checkout, instead
-  of leaving that rule as unverified guidance. Tell the user about its escape
-  hatch: touching `.claude/.worktree-bypass` in the target project's main
-  checkout disables it for a session they've explicitly told to work directly
-  in the checkout.
+  of leaving that rule as unverified guidance. It enforces this in **local**
+  sessions only: in cloud sessions (`CLAUDE_CODE_REMOTE=true`) it no-ops,
+  because the session's own freshly cloned repository is already the isolation,
+  so worktree isolation is a local-only rule. Tell the user about its escape
+  hatch (for local sessions): touching `.claude/.worktree-bypass` in the target
+  project's main checkout disables it for a session they've explicitly told to
+  work directly in the checkout.
 
 ## 5b. Ignore the worktree paths and the bypass marker
 
@@ -239,6 +242,9 @@ Tell the user:
   `.claude/settings.json`, and any `.gitignore` additions from step 5b) still
   need to be committed — per AGENTS.md's git rules, don't commit them yourself
   unless asked. (`core.hooksPath` lives in `.git/config`, which is not committed.)
-- That `worktree_guard.py` runs on every `Edit`/`Write`/`NotebookEdit` call,
-  local or cloud — unlike `session-start.sh` and `core.hooksPath`, it is not
-  split by environment.
+- That `worktree_guard.py` runs on every `Edit`/`Write`/`NotebookEdit` call in
+  **local** sessions, enforcing worktree isolation there. In cloud sessions
+  (`CLAUDE_CODE_REMOTE=true`) it no-ops — the per-session clone already provides
+  the isolation — so it is installed everywhere but, like `session-start.sh`
+  (cloud-only) and `core.hooksPath` (local-only), its effect is
+  environment-split too: it only bites locally.
