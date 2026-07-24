@@ -87,6 +87,14 @@ Synthesize everything from the discussion and codebase analysis into a completed
 PRD, following [reference/PRD-FORMAT.md](reference/PRD-FORMAT.md). Do **not** run
 another interview for this — use the understanding already gained in step 3.
 
+Specify the problem and the desired observable behavior; do **not** sketch a
+technical solution or paste code. State everything the reader must verify in the
+glossary's domain terms, so it holds without knowledge of the implementation. A
+genuinely settled architectural trade-off goes into an ADR (step 3) and is
+referenced from the PRD — leave every still-open technical choice to
+implementation, which may find a better alternative or challenge the existing
+design.
+
 ## 6. Create the main-issue and store the spec
 
 The PRD is not left standing as its own file — it becomes the `## Description` of

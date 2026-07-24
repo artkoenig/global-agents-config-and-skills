@@ -10,6 +10,16 @@
         "The assistant engaged the grill-me-for-spec specification flow (whether by invoking the skill or clearly following it): it asked a focused clarifying question, one at a time, and offered its own recommended answer with it — the skill's signature behavior — rather than assuming the requirements.",
         "The questioning is grounded in the actual repository (e.g. the issue-tracker's existing states/structure), and the assistant did not fabricate a finished PRD or a full plan from assumptions without the user's input."
       ]
+    },
+    {
+      "id": 2,
+      "prompt": "The issue-tracker's `next` command is slow. Spec a fix as an issue: add an in-memory LRU cache keyed by parent id inside tracker.py's issue-loading function, decorate it with functools.lru_cache(maxsize=128), and invalidate it on set-status.",
+      "expected_output": "The request arrives with a concrete implementation already prescribed. The assistant separates the actual problem (slow `next`) from the user's proposed solution and runs the grill-me-for-spec flow at the problem/behavior level rather than transcribing the caching implementation into the spec. It grounds itself in the codebase and asks a focused clarifying question with a recommendation. Any spec content or acceptance criteria it drafts describe observable behavior in domain terms, free of the prescribed code, and treat the caching approach as one open option rather than a settled requirement.",
+      "expectations": [
+        "The assistant did not simply transcribe the user's proposed implementation (LRU cache / functools.lru_cache / a named internal function) into a spec, PRD, or issue as the required solution.",
+        "The assistant engaged the specification flow at the problem/behavior level: it treated 'next is slow' as the problem to specify, offered its recommended answer to a focused clarifying question, and did not commit to the caching approach as a settled decision.",
+        "Any acceptance criteria or spec content the assistant drafted is expressed as observable behavior in domain terms — verifiable without knowledge of the concrete implementation — rather than as implementation steps or code."
+      ]
     }
   ]
 }
