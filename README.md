@@ -25,8 +25,8 @@ below.
 | `grill-me-for-spec` | Interactive requirements analysis that grills you one question at a time, researches the codebase, refines the domain glossary (`CONTEXT.md`) and ADRs, writes a PRD, and opens the main-issue that carries it. |
 | `issue-tracker` | Local, file-based tracker under `docs/issues/`. A main-issue maps 1:1 to one branch, worktree and PR; its nested child-issues are that PR's vertical slices. Handles init, lifecycle, breakdown and implementation. |
 | `engineering-principles` | The design and implementation principles that must be read before any architectural decision or code change. Preloaded into subagents via their `skills:` frontmatter. |
-| `review` | The five-axis review (Standards, Specification, Tests, Docs, Design-Conformance) that orchestrates the reviewer subagents below. Axis E checks the diff against the `design.md` module plan; with no plan it falls back to an independent `clean-room-review`. |
-| `clean-room-review` | An independent, blind design proposal from the `clean-room-reviewer` (which never sees the code), reconciled against reality. Used standalone for design gut-checks, to gut-check the architect's `design.md` before implementation, and as the Axis E fallback of `review`. |
+| `review` | The five-axis review (Standards, Specification, Tests, Docs, Design-Conformance) that orchestrates the reviewer subagents below. Axis E checks the diff against the `design.md` module plan; with no plan it is skipped, like Specification without a spec. |
+| `clean-room-review` | An independent, blind design proposal from the `clean-room-reviewer` (which never sees the code), reconciled against reality. Used standalone for design gut-checks and to gut-check the architect's `design.md` before implementation. |
 | `cloud-session-bootstrap` | Wires a project so its cloud sessions load these skills and subagents via a `SessionStart` hook. See [Using this in a cloud session](#using-this-in-a-cloud-session). |
 | `self-test` | Runs the deterministic git checks and behavioral evals that keep this repo's own rules honest. See [Self-testing the workflow](#self-testing-the-workflow). |
 | `skill-creator` | Create, edit, optimize and benchmark skills. |
@@ -47,7 +47,7 @@ summary comes back.
 | `test-runner` | `haiku` | Axis C of `review`: run the suite, report green/red. |
 | `docs-reviewer` | `sonnet` | Axis D of `review`: the diff against the repository's own documentation. |
 | `design-reviewer` | `sonnet` | Axis E of `review` when a plan exists: the diff against the `solution-architect`'s `design.md` — did the implementation honour the planned module boundaries and shared contracts? |
-| `clean-room-reviewer` | `opus` | Axis E fallback of `review` (and the architect's plan gut-check): designs an independent solution from the problem and raw data alone (it never sees the code), to challenge the implementation. Driven via the `clean-room-review` skill. |
+| `clean-room-reviewer` | `opus` | The architect's plan gut-check (and standalone design gut-checks): designs an independent solution from the problem and raw data alone (it never sees the code), to challenge the approach before implementation. Driven via the `clean-room-review` skill. |
 
 Each declares the skills it needs via the `skills:` frontmatter field, so the
 principles are preloaded into the subagent's context rather than costing the main

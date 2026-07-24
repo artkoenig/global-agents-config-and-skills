@@ -50,8 +50,8 @@ to get it off the board — that would record it as implemented. See
    /review <issue-tracker-dir>/<issue-id> <issue-tracker-dir>/<issue-id>/design.md
    ```
    If there is no `design.md` (a single-slice main-issue, or one where the
-   architect step was skipped), pass only the issue directory; Axis E then falls
-   back to its clean-room review. The `design.md` still exists at this point — it
+   architect step was skipped), pass only the issue directory; Axis E is then
+   skipped, just as Axis B is skipped without a spec. When a `design.md` exists it
    is not deleted until step 4, **after** this review — so Axis E can read it.
    If it surfaces blocking findings, fix them (or hand them to the user) and
    re-run `review` — do not resolve a main-issue that hasn't passed

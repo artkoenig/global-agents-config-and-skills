@@ -1,6 +1,6 @@
 ---
 name: clean-room-review
-description: Get an independent, unbiased solution proposal for a problem from an external expert (the `clean-room-reviewer` subagent) who has never seen your code, your docs, or the answer you are leaning toward — then reconcile that fresh proposal with the real domain and codebase. Use it when you want a genuine second opinion that is not anchored to the status quo: a design decision, an architecture choice, a "are we overcomplicating this?" gut-check. Not for reviewing existing code line-by-line (that is `standards-reviewer`); the reviewer never sees the diff or the existing solution. It gut-checks the `solution-architect`'s `design.md` before implementation, and it is the fallback for the `review` skill's Axis E when no `design.md` exists — it feeds the reviewer the problem and the raw data, then reconciles the blind proposal against the implementation.
+description: Get an independent, unbiased solution proposal for a problem from an external expert (the `clean-room-reviewer` subagent) who has never seen your code, your docs, or the answer you are leaning toward — then reconcile that fresh proposal with the real domain and codebase. Use it when you want a genuine second opinion that is not anchored to the status quo: a design decision, an architecture choice, a "are we overcomplicating this?" gut-check. Not for reviewing existing code line-by-line (that is `standards-reviewer`); the reviewer never sees the diff or the existing solution. It is used to gut-check the `solution-architect`'s `design.md` before implementation, and standalone for any design decision where an independent, status-quo-free proposal is worth more than a critique of what already exists.
 user-invocable: true
 ---
 
@@ -26,10 +26,9 @@ The reviewer designs blind; you translate their blind proposal back into reality
 Do **not** use it to review existing code (`standards-reviewer`), to check a
 diff against a spec line-by-line (`spec-reviewer`), or to research how the
 current system works (`spec-researcher`). The reviewer itself never sees the
-diff. Turning its blind proposal into a verdict on an existing implementation is
-the caller's job — the `review` skill's Axis E clean-room fallback (used when no
-`design.md` plan exists) does exactly that, and is the one sanctioned way to point
-this workflow at a diff.
+diff. Turning its blind proposal into a concrete recommendation — reconciled
+against the real code and domain — is the caller's job (step 5). Keeping the
+reviewer blind is the whole point; never hand it the diff or the existing design.
 
 ## The one rule that makes this work: neutrality
 
