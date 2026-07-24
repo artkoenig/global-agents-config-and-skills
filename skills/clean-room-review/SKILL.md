@@ -1,6 +1,6 @@
 ---
 name: clean-room-review
-description: Get an independent, unbiased solution proposal for a problem from an external expert (the `clean-room-reviewer` subagent) who has never seen your code, your docs, or the answer you are leaning toward — then reconcile that fresh proposal with the real domain and codebase. Use it when you want a genuine second opinion that is not anchored to the status quo: a design decision, an architecture choice, a "are we overcomplicating this?" gut-check. Not for reviewing existing code line-by-line (that is `standards-reviewer`); the reviewer never sees the diff or the existing solution. The `review` skill's Clean-Room axis (Axis E) is built on this workflow — it feeds the reviewer the problem and the raw data, then reconciles the blind proposal against the implementation.
+description: Get an independent, unbiased solution proposal for a problem from an external expert (the `clean-room-reviewer` subagent) who has never seen your code, your docs, or the answer you are leaning toward — then reconcile that fresh proposal with the real domain and codebase. Use it when you want a genuine second opinion that is not anchored to the status quo: a design decision, an architecture choice, a "are we overcomplicating this?" gut-check. Not for reviewing existing code line-by-line (that is `standards-reviewer`); the reviewer never sees the diff or the existing solution. It gut-checks the `solution-architect`'s `design.md` before implementation, and it is the fallback for the `review` skill's Axis E when no `design.md` exists — it feeds the reviewer the problem and the raw data, then reconciles the blind proposal against the implementation.
 user-invocable: true
 ---
 
@@ -27,8 +27,9 @@ Do **not** use it to review existing code (`standards-reviewer`), to check a
 diff against a spec line-by-line (`spec-reviewer`), or to research how the
 current system works (`spec-researcher`). The reviewer itself never sees the
 diff. Turning its blind proposal into a verdict on an existing implementation is
-the caller's job — the `review` skill's Clean-Room axis (Axis E) does exactly
-that, and is the one sanctioned way to point this workflow at a diff.
+the caller's job — the `review` skill's Axis E clean-room fallback (used when no
+`design.md` plan exists) does exactly that, and is the one sanctioned way to point
+this workflow at a diff.
 
 ## The one rule that makes this work: neutrality
 

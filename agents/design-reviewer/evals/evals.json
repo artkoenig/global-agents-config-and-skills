@@ -1,0 +1,27 @@
+{
+  "agent_name": "design-reviewer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The `checkout-redesign` main-issue is implemented and its module plan sits at `docs/issues/01-checkout-redesign/design.md`. Run the five-axis review over the current changes before we resolve it.",
+      "expected_output": "Because a design plan is available, Axis E runs as the design-reviewer subagent against that design.md — a read-only diff-vs-plan conformance check (did the code honour the planned module boundaries and shared contracts?), not a clean-room re-design and not a behaviour or code-smell check. It reports departures (ideally distinguishing drift-to-fix from justified-improvement) and fixes nothing. The other axes still run.",
+      "expectations": [
+        "Axis E was routed to the design-reviewer subagent against the provided design.md, because a design plan was available — NOT to the clean-room-reviewer / clean-room-review workflow.",
+        "The design-reviewer check is scoped to conformance: the diff against the plan's module boundaries and shared contracts — not behaviour vs acceptance criteria (Axis B), code smells (Axis A), or documentation (Axis D).",
+        "Axis E ran read-only: design-reviewer reports departures (ideally distinguishing drift-to-fix from justified-improvement) without editing or 'fixing' any file.",
+        "The other axes still run (A Standards, C Tests, D Docs, and B Specification given the issue spec); Axis E is the only axis whose mode changed."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "This is a single-slice main-issue — there was no module-planning step and there's no design.md anywhere for it. Run the review before we resolve it.",
+      "expected_output": "With no design plan available, Axis E falls back to the clean-room-review workflow (an independent blind design reconciled against the implementation), NOT the design-reviewer. Axis E still runs — it is never skipped — so the five-axis review is complete via the fallback mode.",
+      "expectations": [
+        "Because no design.md exists, Axis E fell back to the clean-room-review workflow (clean-room-reviewer, a blind independent design), and did NOT invoke design-reviewer.",
+        "The assistant did not fabricate a design.md or demand one in order to run design-reviewer; it recognized the plan-less case as exactly when the clean-room fallback applies.",
+        "Axis E still ran — it is never skipped — so the five-axis review is complete, just via the fallback mode.",
+        "The clean-room fallback preserves neutrality: the brief carries the problem and the raw data, not the existing implementation or a preferred approach."
+      ]
+    }
+  ]
+}

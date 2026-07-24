@@ -41,12 +41,18 @@ to get it off the board — that would record it as implemented. See
    (five-axis review), once per main-issue, not per child-issue. It should
    already be `claimed` (see [implement.md](implement.md) — a main-issue is
    claimed the moment work starts on any of its child-issues). Pass the
-   main-issue's own issue directory as the acceptance-criteria source: Axis B
-   reviews the diff against its spec, and Axis E (Clean-Room) draws that same
-   issue's description for the problem statement of its blind brief:
+   main-issue's own issue directory as the acceptance-criteria source, and — when
+   the [architect step](architect.md) produced one — its `design.md` as the
+   design-plan source. Axis B reviews the diff against the spec, and Axis E checks
+   the diff against `design.md` (did the implementation honour the planned module
+   boundaries and shared contracts?):
    ```
-   /review <issue-tracker-dir>/<issue-id>
+   /review <issue-tracker-dir>/<issue-id> <issue-tracker-dir>/<issue-id>/design.md
    ```
+   If there is no `design.md` (a single-slice main-issue, or one where the
+   architect step was skipped), pass only the issue directory; Axis E then falls
+   back to its clean-room review. The `design.md` still exists at this point — it
+   is not deleted until step 4, **after** this review — so Axis E can read it.
    If it surfaces blocking findings, fix them (or hand them to the user) and
    re-run `review` — do not resolve a main-issue that hasn't passed
    verification. Child-issues skip this step entirely: they never run the full
@@ -92,9 +98,9 @@ to get it off the board — that would record it as implemented. See
    ```bash
    rm -f "<issue-tracker-dir>/<main-issue-id>/design.md"
    ```
-   The five-axis `review` in step 2 has already run against the plan-informed
-   diff, so the plan has served its purpose by now. Then stage and commit the
-   accumulated work.
+   The five-axis `review` in step 2 has already checked the diff against the plan
+   (Axis E, Design-Conformance), so the plan has served its purpose by now. Then
+   stage and commit the accumulated work.
 
 5. **Open the pull request — automatically (main-issue only).** Once a
    main-issue is `resolved` and committed, push its `issue/<slug>` branch and

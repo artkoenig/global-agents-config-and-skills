@@ -258,8 +258,9 @@ than files, logs, or diffs.
   run **sequentially, never in parallel** — each edits the session's working
   tree in place on the main-issue branch and hands its slice back.
 - **Verification** → the `review` skill, which fans out to `standards-reviewer`,
-  `spec-reviewer`, `test-runner`, `docs-reviewer` and — via `clean-room-review` —
-  `clean-room-reviewer`.
+  `spec-reviewer`, `test-runner`, `docs-reviewer` and, for Axis E,
+  `design-reviewer` against the `design.md` plan — or, when no plan exists,
+  `clean-room-reviewer` via `clean-room-review`.
 
 Do not delegate anything that has to ask me something — subagents have no way to
 put a question to me and will invent the answer instead. The grilling in

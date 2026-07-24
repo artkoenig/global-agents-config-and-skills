@@ -92,7 +92,7 @@ Never use it to escape a slice that is merely hard or failing.
 Run **only the test suite** for your slice — not the full five-axis `review`
 skill. Delegate the run to the `test-runner` subagent: it finds the project's
 test command, runs the suite, and reports green/red with the failing output. The
-full five-axis `review` skill (Standards + Spec + Tests + Docs + Clean-Room) is
+full five-axis `review` skill (Standards + Spec + Tests + Docs + Design-Conformance) is
 reserved for the **main-issue** and runs exactly once, after its whole subtree is
 done (see `resolve.md`); it never runs per child-issue.
 

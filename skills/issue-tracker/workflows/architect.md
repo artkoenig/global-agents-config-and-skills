@@ -86,6 +86,10 @@ an ADR **persists**: it is committed and outlives the plan. Then reference it fr
 
 The plan is ready. Proceed to [implement.md](implement.md): each
 `issue-implementer` reads `docs/issues/<main-id>/design.md` and builds its slice
-against the module boundaries and contracts it defines. The `design.md` stays in
-the working tree, uncommitted, for the whole implementation, and is deleted at the
-main-issue resolution gate (resolve.md step 4) so it never lands in the PR.
+against the module boundaries and contracts it defines. At the resolution gate,
+the `review` skill's Axis E (Design-Conformance) checks the finished diff back
+against this same `design.md` — did the implementation honour the plan? — which is
+why the clean-room independence is spent here, up front, on the plan itself. The
+`design.md` stays in the working tree, uncommitted, for the whole implementation,
+and is deleted at the main-issue resolution gate (resolve.md step 4, after that
+review) so it never lands in the PR.
