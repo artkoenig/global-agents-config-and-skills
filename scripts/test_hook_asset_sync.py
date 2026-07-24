@@ -38,9 +38,10 @@ import worktree_guard as guard  # noqa: E402
 
 # Hooks this config repo dogfoods in its own `.claude/hooks/` must match the
 # skill's canonical asset byte-for-byte, so re-running the skill would detect no
-# drift. `session-start.sh` is deliberately absent: it clones this repo into a
-# target, so this repo — being that source — has no reason to install it.
-SYNCED_HOOKS = ("worktree_guard.py", "worktree-create.sh")
+# drift. `session-start.sh` is included too: this repo now installs it so its own
+# cloud sessions load the personal skills/subagents (the hook is a no-op locally,
+# guarding on CLAUDE_CODE_REMOTE), so its copy must stay in sync like the others.
+SYNCED_HOOKS = ("worktree_guard.py", "worktree-create.sh", "session-start.sh")
 
 
 class HookCopiesMatchAssets(unittest.TestCase):
